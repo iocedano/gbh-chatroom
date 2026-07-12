@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user
@@ -6,7 +8,12 @@ from infra.database import get_db
 from models.user import User
 from schemas.messages import MessageCreate, MessageRead
 from services import messages as message_service
-from services.messages import MessagePermissionError, MessageRoomNotFoundError
+from services.messages import (
+    InvalidIdempotencyKeyError,
+    MessageIdempotencyConflictError,
+    MessagePermissionError,
+    MessageRoomNotFoundError,
+)
 
 router = APIRouter(prefix="/rooms/{room_id}/messages", tags=["messages"])
 
@@ -15,15 +22,29 @@ router = APIRouter(prefix="/rooms/{room_id}/messages", tags=["messages"])
 def create_message(
     room_id: int,
     payload: MessageCreate,
+    idempotency_key: Annotated[
+        str,
+        Header(alias="Idempotency-Key", min_length=1, max_length=128),
+    ],
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     try:
-        return message_service.create_message(db, room_id, payload, sender_id=current_user.id)
+        return message_service.create_message(
+            db,
+            room_id,
+            payload,
+            sender_id=current_user.id,
+            idempotency_key=idempotency_key,
+        )
     except MessageRoomNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except MessagePermissionError as exc:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc)) from exc
+    except InvalidIdempotencyKeyError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    except MessageIdempotencyConflictError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
 
 @router.get("", response_model=list[MessageRead])

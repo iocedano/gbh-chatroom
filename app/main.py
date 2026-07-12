@@ -2,18 +2,20 @@ from fastapi import Depends, FastAPI
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from api.routes import auth, chat_rooms, messages, users
 from infra.database import get_db
 
-app = FastAPI()
+app = FastAPI(title="GBH Chat API")
+
+app.include_router(auth.router)
+app.include_router(users.router)
+app.include_router(chat_rooms.router)
+app.include_router(messages.router)
+
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
-
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str | None = None):
-    return {"item_id": item_id, "q": q}
+    return {"name": "GBH Chat API", "status": "ok"}
 
 
 @app.get("/health/db")

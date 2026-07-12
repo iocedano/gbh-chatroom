@@ -1,0 +1,7 @@
+.git
+__pycache__/
+*.py[cod]
+*.db
+.env
+api/.venv/
+postgres_data/

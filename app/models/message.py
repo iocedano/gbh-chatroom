@@ -27,3 +27,7 @@ class Message(Base):
 
     room: Mapped["ChatRoom"] = relationship(back_populates="messages")
     sender: Mapped["User"] = relationship(back_populates="messages")
+
+    @property
+    def sender_username(self) -> str:
+        return self.sender.username

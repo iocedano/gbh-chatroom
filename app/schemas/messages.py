@@ -22,4 +22,5 @@ class MessageRead(BaseModel):
     content: str
     room_id: int
     sender_id: int
+    sender_username: str
     created_at: datetime

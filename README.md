@@ -471,6 +471,9 @@ Referencia completa: [docs/websocket.md](docs/websocket.md).
 - [docs/websocket.md](docs/websocket.md): contrato realtime, errores y QA manual.
 - [docs/idempotency.md](docs/idempotency.md): contrato de `Idempotency-Key` y deduplicacion.
 - [docs/rate-limiting.md](docs/rate-limiting.md): configuracion, scopes y comportamiento REST/WebSocket.
+- [docs/folder-architecture.md](docs/folder-architecture.md): estructura de carpetas y responsabilidades.
+- [docs/design-patterns.md](docs/design-patterns.md): patrones de diseno usados en backend y frontend.
+- [docs/system-design.md](docs/system-design.md): diseno de sistema, flujos, datos, seguridad y escalabilidad.
 
 ## Arquitectura
 

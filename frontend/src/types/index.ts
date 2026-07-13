@@ -19,9 +19,11 @@ export interface ChatRoom {
 
 export interface Message {
   id: number
+  client_message_id?: string
   content: string
   room_id: number
   sender_id: number
+  sender_username?: string
   created_at: string
 }
 
@@ -29,3 +31,19 @@ export interface StoredAuth {
   token: string
   user: User
 }
+
+export interface MessageCreatedEvent {
+  type: 'message.created'
+  message: Message
+}
+
+export interface WebSocketErrorEvent {
+  type: 'error'
+  error: {
+    code: string
+    message: string
+    client_message_id?: string | null
+  }
+}
+
+export type RoomWebSocketEvent = MessageCreatedEvent | WebSocketErrorEvent

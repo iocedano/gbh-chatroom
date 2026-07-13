@@ -1,18 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ApiError } from '../api/client'
-import { listMessages, sendMessage } from '../api/messages'
+import { listMessages } from '../api/messages'
 import { joinRoom, leaveRoom } from '../api/rooms'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { MessageInput } from '../components/MessageInput'
 import { MessageList } from '../components/MessageList'
 import { useAuth } from '../hooks/useAuth'
+import { useRoomWebSocket } from '../hooks/useRoomWebSocket'
 import type { Message } from '../types'
 
 export function ChatPage() {
   const { roomId } = useParams()
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { token, user, logout } = useAuth()
   const parsedRoomId = Number(roomId)
 
   const [messages, setMessages] = useState<Message[]>([])
@@ -51,9 +52,29 @@ export function ChatPage() {
     void loadMessages()
   }, [loadMessages])
 
+  const handleMessageCreated = useCallback((nextMessage: Message) => {
+    setMessages((current) => {
+      if (current.some((message) => message.id === nextMessage.id)) {
+        return current
+      }
+
+      return [...current, nextMessage]
+    })
+  }, [])
+
+  const {
+    status: websocketStatus,
+    error: websocketError,
+    sendMessage: sendRealtimeMessage,
+  } = useRoomWebSocket({
+    roomId: parsedRoomId,
+    token,
+    enabled: !loading && !error && !leaving,
+    onMessageCreated: handleMessageCreated,
+  })
+
   async function handleSend(content: string) {
-    const created = await sendMessage(parsedRoomId, content)
-    setMessages((current) => [...current, created])
+    await sendRealtimeMessage(content)
   }
 
   async function handleLeave() {
@@ -111,8 +132,21 @@ export function ChatPage() {
 
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-4 py-6">
         <ErrorBanner message={error} />
+        <ErrorBanner message={websocketError} />
+        {!loading && !error && (
+          <p className="text-xs text-gray-500">
+            {websocketStatus === 'connected'
+              ? 'Conectado en tiempo real'
+              : websocketStatus === 'connecting'
+                ? 'Conectando chat en tiempo real...'
+                : 'Chat en tiempo real desconectado'}
+          </p>
+        )}
         <MessageList messages={messages} currentUserId={user?.id ?? null} loading={loading} />
-        <MessageInput onSend={handleSend} disabled={loading || leaving || Boolean(error)} />
+        <MessageInput
+          onSend={handleSend}
+          disabled={loading || leaving || Boolean(error) || websocketStatus !== 'connected'}
+        />
       </main>
     </div>
   )

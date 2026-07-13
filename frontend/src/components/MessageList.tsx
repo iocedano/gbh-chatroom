@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import type { Message } from '../types'
 
 interface MessageListProps {
@@ -6,14 +7,26 @@ interface MessageListProps {
   loading?: boolean
 }
 
-function formatSender(senderId: number, currentUserId: number | null) {
+function formatSender(message: Message, currentUserId: number | null) {
+  const senderId = message.sender_id
+
   if (currentUserId !== null && senderId === currentUserId) {
     return 'Tú'
   }
-  return `Usuario #${senderId}`
+
+  return message.sender_username ?? `Usuario #${senderId}`
 }
 
 export function MessageList({ messages, currentUserId, loading = false }: MessageListProps) {
+  const listRef = useRef<HTMLUListElement | null>(null)
+
+  useEffect(() => {
+    const list = listRef.current
+    if (!list) return
+
+    list.scrollTop = list.scrollHeight
+  }, [messages.length])
+
   if (loading) {
     return <p className="text-sm text-gray-500">Cargando mensajes...</p>
   }
@@ -27,7 +40,7 @@ export function MessageList({ messages, currentUserId, loading = false }: Messag
   }
 
   return (
-    <ul className="flex-1 space-y-3 overflow-y-auto rounded-md border border-gray-200 bg-white p-4">
+    <ul ref={listRef} className="flex-1 space-y-3 overflow-y-auto rounded-md border border-gray-200 bg-white p-4">
       {messages.map((message) => {
         const isOwn = currentUserId !== null && message.sender_id === currentUserId
 
@@ -39,7 +52,7 @@ export function MessageList({ messages, currentUserId, loading = false }: Messag
             }`}
           >
             <div className="mb-1 flex items-center gap-2 text-xs text-gray-500">
-              <span className="font-medium">{formatSender(message.sender_id, currentUserId)}</span>
+              <span className="font-medium">{formatSender(message, currentUserId)}</span>
               <span>{new Date(message.created_at).toLocaleString()}</span>
             </div>
             <p className="whitespace-pre-wrap break-words">{message.content}</p>

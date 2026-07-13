@@ -13,11 +13,14 @@ Lista de pendientes para el frontend de GBH Chat. El MVP actual cubre auth, sala
 - [x] Header `Idempotency-Key` al enviar mensajes
 - [x] Manejo básico de errores (`401`, `403`, `409`)
 - [x] CORS habilitado en backend para `localhost:5173`
+- [x] WebSocket: mensajes en tiempo real con `useRoomWebSocket`
+- [x] WebSocket: `client_message_id` generado en cliente
+- [x] WebSocket: `VITE_WS_URL` con fallback desde `VITE_API_URL`
+- [x] Auto-scroll básico al recibir mensajes
 
 ## Pendiente — Prioridad alta
 
-- [ ] **WebSocket**: mensajes en tiempo real (`useRoomWebSocket`)
-- [ ] **Mostrar username del remitente**: el API devuelve `sender_id`, no `username`
+- [ ] **Mostrar username del remitente en historial REST**: el WebSocket devuelve `sender_username`, pero `GET /messages` aun devuelve solo `sender_id`
   - Opción A: extender `MessageRead` en backend con `sender_username`
   - Opción B: cachear usuarios en frontend con `GET /users/{id}`
 - [ ] **Nombre de sala en ChatPage**: hoy muestra `Sala #id`; usar `GET /rooms/{id}` para el nombre
@@ -27,7 +30,7 @@ Lista de pendientes para el frontend de GBH Chat. El MVP actual cubre auth, sala
 ## Pendiente — Prioridad media
 
 - [ ] **Paginación de mensajes**: `offset` / `limit` en `GET /rooms/{id}/messages`
-- [ ] **Auto-scroll** al enviar o recibir mensajes
+- [x] **Auto-scroll** al enviar o recibir mensajes
 - [ ] **Estados de carga** más granulares (skeletons, disabled states)
 - [ ] **Validación de formularios** con mensajes inline (min 3 chars usuario, min 8 password)
 - [ ] **Persistencia de sesión**: verificar token expirado y redirigir a login

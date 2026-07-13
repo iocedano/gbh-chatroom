@@ -94,4 +94,4 @@ Important behavior:
 - If a user leaves a room while the socket is still open, the next `message.create` returns `membership_required`, closes the socket with policy violation `1008`, and removes the connection from the room manager.
 - Broadcast is scoped by `room_id`, so clients in other rooms do not receive the event.
 
-See [docs/websocket-technical-plan.md](docs/websocket-technical-plan.md) for the implementation plan and backend design notes.
+See [docs/websocket.md](docs/websocket.md) for the full backend/frontend technical reference.

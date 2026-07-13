@@ -87,6 +87,23 @@ def create_message(db: Session, room_id: int, payload: MessageCreate, *, sender_
         return existing_message
 
 
+def create_realtime_message(
+    db: Session,
+    room_id: int,
+    payload: MessageCreate,
+    *,
+    sender_id: int,
+    client_message_id: str,
+):
+    return create_message(
+        db,
+        room_id,
+        payload,
+        sender_id=sender_id,
+        idempotency_key=client_message_id,
+    )
+
+
 def list_room_messages(db: Session, room_id: int, *, user_id: int, offset: int = 0, limit: int = 100):
     room = chat_room_repository.get_chat_room_by_id(db, room_id)
     if room is None:

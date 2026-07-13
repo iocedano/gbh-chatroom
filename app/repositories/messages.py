@@ -10,8 +10,8 @@ def create_message(
     content: str,
     room_id: int,
     sender_id: int,
-    idempotency_key: str,
-    idempotency_request_hash: str,
+    idempotency_key: str | None,
+    idempotency_request_hash: str | None,
 ) -> Message:
     message = Message(
         content=content,

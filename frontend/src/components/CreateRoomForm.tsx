@@ -19,7 +19,7 @@ export function CreateRoomForm({ onCreate }: CreateRoomFormProps) {
       await onCreate(name.trim())
       setName('')
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'No se pudo crear la sala'
+      const message = err instanceof Error ? err.message : 'Could not create room'
       setError(message)
     } finally {
       setLoading(false)
@@ -28,14 +28,14 @@ export function CreateRoomForm({ onCreate }: CreateRoomFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3 rounded-md border border-gray-200 bg-white p-4">
-      <h2 className="text-sm font-semibold text-gray-900">Crear sala</h2>
+      <h2 className="text-sm font-semibold text-gray-900">Create room</h2>
       <ErrorBanner message={error} />
       <div className="flex gap-2">
         <input
           type="text"
           value={name}
           onChange={(event) => setName(event.target.value)}
-          placeholder="Nombre de la sala"
+          placeholder="Room name"
           className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
           maxLength={150}
@@ -45,7 +45,7 @@ export function CreateRoomForm({ onCreate }: CreateRoomFormProps) {
           disabled={loading}
           className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
         >
-          {loading ? 'Creando...' : 'Crear'}
+          {loading ? 'Creating...' : 'Create'}
         </button>
       </div>
     </form>

@@ -71,14 +71,14 @@ describe('useRoomWebSocket', () => {
     })
 
     await act(async () => {
-      await result.current.sendMessage('Hola')
+      await result.current.sendMessage('Hello')
     })
 
     expect(MockWebSocket.instances[0].sent).toEqual([
       JSON.stringify({
         type: 'message.create',
         client_message_id: '00000000-0000-4000-8000-000000000001',
-        content: 'Hola',
+        content: 'Hello',
       }),
     ])
   })
@@ -95,8 +95,8 @@ describe('useRoomWebSocket', () => {
       }),
     )
 
-    await expect(result.current.sendMessage('Hola')).rejects.toThrow(
-      'El chat en tiempo real no está conectado',
+    await expect(result.current.sendMessage('Hello')).rejects.toThrow(
+      'Real-time chat is not connected',
     )
   })
 
@@ -116,12 +116,12 @@ describe('useRoomWebSocket', () => {
       MockWebSocket.instances[0].receive(
         JSON.stringify({
           type: 'error',
-          error: { code: 'invalid_message', message: 'Mensaje invalido' },
+          error: { code: 'invalid_message', message: 'Invalid message' },
         }),
       )
     })
 
-    expect(result.current.error).toBe('Mensaje invalido')
+    expect(result.current.error).toBe('Invalid message')
 
     act(() => {
       MockWebSocket.instances[0].closeWith(1008)
@@ -129,7 +129,7 @@ describe('useRoomWebSocket', () => {
 
     await waitFor(() => {
       expect(result.current.status).toBe('disconnected')
-      expect(result.current.error).toBe('Mensaje invalido')
+      expect(result.current.error).toBe('Invalid message')
     })
   })
 })

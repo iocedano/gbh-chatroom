@@ -28,7 +28,7 @@ export function RoomsPage() {
         navigate('/', { replace: true })
         return
       }
-      const message = err instanceof ApiError ? err.message : 'No se pudieron cargar las salas'
+      const message = err instanceof ApiError ? err.message : 'Could not load rooms'
       setError(message)
     } finally {
       setLoading(false)
@@ -51,7 +51,7 @@ export function RoomsPage() {
       await joinRoom(roomId)
       navigate(`/rooms/${roomId}`)
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : 'No se pudo entrar a la sala'
+      const message = err instanceof ApiError ? err.message : 'Could not enter room'
       setError(message)
     }
   }
@@ -61,15 +61,15 @@ export function RoomsPage() {
       <header className="border-b border-gray-200 bg-white">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">Salas de chat</h1>
-            <p className="text-sm text-gray-500">Hola, {user?.username}</p>
+            <h1 className="text-xl font-semibold text-gray-900">Chat rooms</h1>
+            <p className="text-sm text-gray-500">Hi, {user?.username}</p>
           </div>
           <button
             type="button"
             onClick={logout}
             className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
           >
-            Salir
+            Log out
           </button>
         </div>
       </header>

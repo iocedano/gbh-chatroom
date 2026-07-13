@@ -1,24 +1,26 @@
 # Folder Architecture
 
-Este documento describe como esta organizado el repo y que responsabilidad tiene cada carpeta.
+This document describes how the repository is organized and what each folder is responsible for.
 
-## Vista General
+## Overview
 
 ```text
 .
-|-- app/                 # Backend FastAPI
-|-- frontend/            # Frontend React/Vite
-|-- docs/                # Documentacion tecnica
-|-- docker-compose.yml   # Stack local con Postgres, API y frontend
-|-- README.md            # Setup, contratos REST y resumen arquitectonico
-`-- TODO_BACKEND.md      # Checklist tecnico del backend
+|-- app/                 # FastAPI backend
+|-- frontend/            # React/Vite frontend
+|-- docs/                # Technical documentation in English
+|-- docs/es/             # Spanish documentation
+|-- docker-compose.yml   # Local stack with Postgres, API, and frontend
+|-- README.md            # Setup, REST contracts, and architecture summary
+`-- TODO_BACKEND.md      # Backend technical checklist
 ```
 
-La separacion principal es por runtime:
+The main split is by runtime:
 
-- `app/` contiene la API, dominio backend, persistencia, migraciones y tests.
-- `frontend/` contiene la aplicacion de navegador y sus clientes HTTP/WebSocket.
-- `docs/` contiene referencias tecnicas mas profundas que el README.
+- `app/` contains the API, backend domain logic, persistence, migrations, and tests.
+- `frontend/` contains the browser application and its HTTP/WebSocket clients.
+- `docs/` contains deeper technical references than the README.
+- `docs/es/` contains the Spanish documentation.
 
 ## Backend: `app/`
 
@@ -44,111 +46,111 @@ app/
 
 ### `app/main.py`
 
-Punto de entrada de FastAPI.
+FastAPI entry point.
 
-Responsabilidades:
+Responsibilities:
 
-- Crear la instancia `FastAPI`.
-- Configurar CORS.
-- Registrar routers REST y WebSocket.
-- Exponer health checks.
+- Create the `FastAPI` instance.
+- Configure CORS.
+- Register REST and WebSocket routers.
+- Expose health checks.
 
 ### `app/api/`
 
-Capa de transporte HTTP/WebSocket.
+HTTP/WebSocket transport layer.
 
-- `routes/`: endpoints REST y WebSocket. Traducen requests a llamadas de servicios y excepciones de dominio a codigos HTTP o eventos WebSocket.
-- `dependencies.py`: dependencias compartidas de FastAPI, como `get_current_user`.
-- `middleware/`: middleware HTTP reutilizable si el proyecto lo necesita.
+- `routes/`: REST and WebSocket endpoints. They translate requests into service calls and map domain exceptions to HTTP codes or WebSocket events.
+- `dependencies.py`: shared FastAPI dependencies such as `get_current_user`.
+- `middleware/`: reusable HTTP middleware when the project needs it.
 
-Regla practica: esta capa debe ser delgada. Validacion de transporte y mapping de errores viven aqui; reglas de negocio viven en `services/`.
+Practical rule: this layer should stay thin. Transport validation and error mapping live here; business rules live in `services/`.
 
 ### `app/services/`
 
-Capa de aplicacion/dominio.
+Application/domain layer.
 
-Responsabilidades:
+Responsibilities:
 
-- Auth, hashing, JWT y validacion de tokens.
-- Reglas de salas, membresia y permisos.
-- Creacion/listado de mensajes.
-- Idempotencia.
-- Flujo realtime de WebSocket.
-- Traduccion de casos de dominio a excepciones especificas.
+- Auth, hashing, JWT creation, and token validation.
+- Room, membership, and permission rules.
+- Message creation and listing.
+- Idempotency.
+- Realtime WebSocket flow.
+- Translation of domain cases into specific exceptions.
 
-Los servicios orquestan repositorios y encapsulan decisiones del producto. Por ejemplo, `messages.py` valida membresia, construye el hash de idempotencia y maneja conflictos antes de persistir.
+Services orchestrate repositories and encapsulate product decisions. For example, `messages.py` validates membership, builds the idempotency hash, and handles conflicts before persisting.
 
 ### `app/repositories/`
 
-Capa de acceso a datos.
+Data access layer.
 
-Responsabilidades:
+Responsibilities:
 
-- Encapsular queries SQLAlchemy.
-- Crear, leer, actualizar y listar modelos.
-- Mantener detalles de persistencia fuera de rutas y servicios.
+- Encapsulate SQLAlchemy queries.
+- Create, read, update, and list models.
+- Keep persistence details out of routes and services.
 
-Regla practica: los repositorios no deben decidir permisos ni reglas de negocio. Reciben parametros ya validados por servicios.
+Practical rule: repositories should not decide permissions or business rules. They receive parameters already validated by services.
 
 ### `app/models/`
 
-Modelos SQLAlchemy.
+SQLAlchemy models.
 
-Responsabilidades:
+Responsibilities:
 
-- Definir tablas, columnas, relaciones e indices/constraints.
-- Representar el estado persistido en Postgres.
+- Define tables, columns, relationships, indexes, and constraints.
+- Represent state persisted in Postgres.
 
-Los modelos son la fuente para migraciones autogeneradas con Alembic, aunque cada migracion generada debe revisarse.
+Models are the source for Alembic autogeneration, although every generated migration must be reviewed.
 
 ### `app/schemas/`
 
-Schemas Pydantic de entrada/salida.
+Pydantic input/output schemas.
 
-Responsabilidades:
+Responsibilities:
 
-- Validar payloads REST y WebSocket reutilizables.
-- Normalizar campos simples, como `content.strip()` o nombres de salas.
-- Definir respuestas publicas sin exponer secretos ni hashes.
+- Validate reusable REST and WebSocket payloads.
+- Normalize simple fields, such as `content.strip()` or room names.
+- Define public responses without exposing secrets or hashes.
 
 ### `app/infra/`
 
-Infraestructura compartida.
+Shared infrastructure.
 
-Responsabilidades:
+Responsibilities:
 
-- Configuracion (`settings.py`).
-- Conexion y sesiones de base de datos (`database.py`).
+- Configuration (`settings.py`).
+- Database connection and sessions (`database.py`).
 - Rate limiting (`rate_limit.py`).
 
-Esta carpeta contiene integraciones tecnicas transversales, no reglas especificas de una entidad.
+This folder contains cross-cutting technical integrations, not entity-specific rules.
 
 ### `app/sockets/`
 
-Estado y utilidades para conexiones WebSocket.
+State and utilities for WebSocket connections.
 
-Responsabilidades:
+Responsibilities:
 
-- Agrupar conexiones activas por `room_id`.
-- Hacer broadcast dentro de una sala.
-- Cerrar conexiones de una sala eliminada.
+- Group active connections by `room_id`.
+- Broadcast within a room.
+- Close connections for a deleted room.
 
 ### `app/alembic/`
 
-Migraciones de base de datos.
+Database migrations.
 
-- `versions/`: historial versionado de cambios de schema.
-- `env.py`: configuracion de Alembic para cargar modelos y URL de base de datos.
+- `versions/`: versioned schema change history.
+- `env.py`: Alembic configuration for loading models and the database URL.
 
 ### `app/tests/`
 
-Suite backend.
+Backend test suite.
 
-Responsabilidades:
+Responsibilities:
 
-- Tests de auth, users, rooms, memberships, messages, idempotencia, rate limiting y WebSocket.
-- Fixtures de base de datos y helpers de entidades.
-- Validar contratos publicos y casos de error.
+- Tests for auth, users, rooms, memberships, messages, idempotency, rate limiting, and WebSocket.
+- Database fixtures and entity helpers.
+- Validate public contracts and error cases.
 
 ## Frontend: `frontend/`
 
@@ -171,91 +173,50 @@ frontend/
 
 ### `frontend/src/api/`
 
-Clientes de integracion con el backend.
+Integration clients for the backend.
 
-Responsabilidades:
+Responsibilities:
 
-- Construir requests HTTP.
-- Centralizar `VITE_API_URL`.
-- Construir URLs WebSocket.
-- Mantener detalles de fetch fuera de componentes.
+- Build HTTP requests.
+- Centralize `VITE_API_URL`.
+- Build WebSocket URLs.
+- Keep fetch details out of components.
 
 ### `frontend/src/hooks/`
 
-Estado y efectos reutilizables.
+Reusable state and effects.
 
-Responsabilidades:
+Responsibilities:
 
-- Auth client-side.
-- Ciclo de vida WebSocket por sala.
-- Envio y recepcion de eventos realtime.
+- Client-side auth.
+- Per-room WebSocket lifecycle.
+- Sending and receiving realtime events.
 
 ### `frontend/src/pages/`
 
-Pantallas conectadas a rutas.
+Route-connected screens.
 
-Responsabilidades:
+Responsibilities:
 
-- Orquestar datos necesarios para una vista.
-- Combinar hooks, clientes API y componentes.
-- Manejar loading/error a nivel de pagina.
+- Orchestrate the data needed by a view.
+- Combine hooks, API clients, and components.
+- Handle page-level loading and error states.
 
 ### `frontend/src/components/`
 
-Componentes de UI reutilizables o especificos de pantalla.
+Reusable or screen-specific UI components.
 
-Responsabilidades:
+Responsibilities:
 
-- Renderizar formularios, listas, banners e inputs.
-- Emitir callbacks hacia paginas/hooks.
-- Mantener logica visual separada de integraciones HTTP.
+- Render forms, lists, banners, and inputs.
+- Emit callbacks to pages/hooks.
+- Keep visual logic separate from HTTP integrations.
 
 ### `frontend/src/types/`
 
-Tipos TypeScript compartidos.
+Shared TypeScript types.
 
-Responsabilidades:
+Responsibilities:
 
-- Contratos del frontend para users, rooms, messages y eventos WebSocket.
-- Reducir duplicacion entre clientes API, hooks y componentes.
-
-## Flujo De Dependencias
-
-Backend:
-
-```text
-routes -> services -> repositories -> models
-   |          |              |
-   |          |              `-- database session
-   |          `-- schemas, infra, sockets segun el caso
-   `-- dependencies, schemas
-```
-
-Frontend:
-
-```text
-pages -> hooks -> api
-  |        |
-  |        `-- types
-  `-- components -> types
-```
-
-Reglas de direccion:
-
-- Rutas dependen de servicios; servicios no dependen de rutas.
-- Servicios dependen de repositorios; repositorios no dependen de servicios.
-- Schemas pueden usarse en rutas y servicios, pero no deben importar rutas.
-- Componentes UI no deberian construir URLs ni conocer detalles de fetch.
-- Hooks pueden coordinar efectos y estado; componentes renderizan y delegan.
-
-## Donde Agregar Codigo Nuevo
-
-- Nuevo endpoint REST: `app/api/routes/`, schema en `app/schemas/`, reglas en `app/services/`, queries en `app/repositories/`.
-- Nueva entidad persistida: modelo en `app/models/`, migracion en `app/alembic/versions/`, repositorio y tests.
-- Nueva regla de negocio: `app/services/`.
-- Nueva integracion transversal: `app/infra/`.
-- Nuevo evento WebSocket: contrato en `docs/websocket.md`, manejo en `app/services/realtime.py` y transporte en `app/api/routes/websocket.py`.
-- Nueva llamada frontend al backend: `frontend/src/api/`.
-- Nuevo estado/effect compartido: `frontend/src/hooks/`.
-- Nueva pantalla: `frontend/src/pages/`.
-- Nueva pieza visual reutilizable: `frontend/src/components/`.
+- Frontend contracts for users, rooms, messages, and WebSocket events.
+- Reduce duplication across API clients, hooks, and components.

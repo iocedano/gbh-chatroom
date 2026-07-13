@@ -1,31 +1,31 @@
 # System Design
 
-Este documento describe el diseno de sistema de GBH Chat: componentes, datos, flujos, decisiones tecnicas, limites actuales y caminos de evolucion.
+This document describes the GBH Chat system design: components, data, flows, technical decisions, current limits, and evolution paths.
 
-## Objetivo Del Sistema
+## System Goal
 
-GBH Chat permite que usuarios autenticados creen salas, se unan a salas, consulten historial y envien mensajes en tiempo real.
+GBH Chat allows authenticated users to create rooms, join rooms, read history, and send realtime messages.
 
-Requisitos funcionales cubiertos:
+Covered functional requirements:
 
-- Registro y login con JWT.
-- CRUD basico de usuarios y salas.
-- Membresia de salas con join/leave.
-- Historial de mensajes por sala.
-- Envio de mensajes por REST con idempotencia.
-- Envio y broadcast de mensajes por WebSocket.
-- Rate limiting para auth y mensajes.
-- Health checks para liveness y readiness.
+- Registration and login with JWT.
+- Basic CRUD for users and rooms.
+- Room membership with join/leave.
+- Message history per room.
+- Message sending over REST with idempotency.
+- Message sending and broadcast over WebSocket.
+- Rate limiting for auth and messages.
+- Health checks for liveness and readiness.
 
-Requisitos no funcionales cubiertos:
+Covered non-functional requirements:
 
-- Separacion de capas.
-- Migraciones versionadas.
-- Tests automatizados backend.
-- Configuracion por entorno.
-- Contratos documentados para REST y WebSocket.
+- Layer separation.
+- Versioned migrations.
+- Automated backend tests.
+- Environment-based configuration.
+- Documented REST and WebSocket contracts.
 
-## Vista De Alto Nivel
+## High-Level View
 
 ```mermaid
 flowchart LR
@@ -43,15 +43,15 @@ flowchart LR
   WS --> Limiter
 ```
 
-Componentes:
+Components:
 
-- Frontend React/Vite: interfaz de usuario, auth client-side, REST client y WebSocket client.
-- FastAPI REST: auth, usuarios, salas, membresia, historial y envio REST de mensajes.
-- FastAPI WebSocket: conexion realtime por sala y broadcast de mensajes.
-- Postgres: fuente de verdad para usuarios, salas, membresias y mensajes.
-- Rate limiter: proteccion contra abuso, usando `limits`.
+- React/Vite frontend: user interface, client-side auth, REST client, and WebSocket client.
+- FastAPI REST: auth, users, rooms, membership, history, and REST message sending.
+- FastAPI WebSocket: realtime room connection and message broadcast.
+- Postgres: source of truth for users, rooms, memberships, and messages.
+- Rate limiter: abuse protection through `limits`.
 
-## Contenedores
+## Containers
 
 ```mermaid
 flowchart TB
@@ -81,25 +81,25 @@ flowchart TB
   Services --> Settings
 ```
 
-La API mantiene una arquitectura por capas:
+The API keeps a layered architecture:
 
 ```text
 routes -> services -> repositories -> models
 ```
 
-El frontend sigue una separacion similar:
+The frontend follows a similar separation:
 
 ```text
 pages -> hooks -> api
 pages -> components
 ```
 
-Referencias:
+References:
 
 - [folder-architecture.md](folder-architecture.md)
 - [design-patterns.md](design-patterns.md)
 
-## Modelo De Datos
+## Data Model
 
 ```mermaid
 erDiagram
@@ -142,17 +142,17 @@ erDiagram
   }
 ```
 
-Notas:
+Notes:
 
-- `users.username` es unico.
-- `messages.content` tiene maximo de 1000 caracteres.
-- `messages` tiene constraint unico en `room_id + sender_id + idempotency_key`.
-- `room_members.left_at = null` representa membresia activa.
-- Eliminar una sala elimina sus mensajes y membresias por cascade ORM.
+- `users.username` is unique.
+- `messages.content` has a maximum of 1000 characters.
+- `messages` has a unique constraint on `room_id + sender_id + idempotency_key`.
+- `room_members.left_at = null` represents active membership.
+- Deleting a room deletes its messages and memberships through ORM cascade.
 
-## Flujos Principales
+## Main Flows
 
-### Registro Y Login
+### Registration And Login
 
 ```mermaid
 sequenceDiagram
@@ -169,14 +169,14 @@ sequenceDiagram
   R-->>C: access_token + user
 ```
 
-Decisiones:
+Decisions:
 
-- Passwords se reciben en texto plano solo en request HTTPS esperado.
-- La API almacena `password_hash`, nunca password plano.
-- JWT usa `sub` como `user_id`.
-- En produccion, `JWT_SECRET_KEY` debe cambiarse.
+- Passwords are received as plaintext only in the expected HTTPS request.
+- The API stores `password_hash`, never plaintext passwords.
+- JWT uses `sub` as `user_id`.
+- In production, `JWT_SECRET_KEY` must be changed.
 
-### Crear O Unirse A Sala
+### Create Or Join Room
 
 ```mermaid
 sequenceDiagram
@@ -193,13 +193,13 @@ sequenceDiagram
   R-->>C: JSON response
 ```
 
-Decisiones:
+Decisions:
 
-- Crear una sala asigna `created_by` al usuario autenticado.
-- Join crea o reactiva membresia segun el estado previo.
-- Leave marca `left_at`; no borra el historial de membresia.
+- Creating a room assigns `created_by` to the authenticated user.
+- Join creates or reactivates membership depending on prior state.
+- Leave sets `left_at`; it does not delete membership history.
 
-### Cargar Historial
+### Load History
 
 ```mermaid
 sequenceDiagram
@@ -219,13 +219,13 @@ sequenceDiagram
   R-->>C: Messages with sender_username
 ```
 
-Decisiones:
+Decisions:
 
-- Solo miembros activos pueden leer historial.
-- El orden es ascendente por `created_at` y `id`.
-- `sender_username` se incluye para evitar lookups extra en frontend.
+- Only active members can read history.
+- Ordering is ascending by `created_at` and `id`.
+- `sender_username` is included to avoid extra frontend lookups.
 
-### Enviar Mensaje Por REST
+### Send Message Over REST
 
 ```mermaid
 sequenceDiagram
@@ -255,16 +255,16 @@ sequenceDiagram
   R-->>C: MessageRead or error
 ```
 
-Decisiones:
+Decisions:
 
-- `Idempotency-Key` es obligatoria en REST.
-- El hash de idempotencia lo calcula el backend.
-- Reusar key con otro contenido devuelve `409 Conflict`.
-- El rate limit actual ocurre antes del lookup idempotente.
+- `Idempotency-Key` is required for REST.
+- The backend calculates the idempotency hash.
+- Reusing a key with different content returns `409 Conflict`.
+- The current rate limit check happens before the idempotent lookup.
 
-Referencia: [idempotency.md](idempotency.md).
+Reference: [idempotency.md](idempotency.md).
 
-### Enviar Mensaje Por WebSocket
+### Send Message Over WebSocket
 
 ```mermaid
 sequenceDiagram
@@ -291,56 +291,56 @@ sequenceDiagram
   M-->>C: message.created
 ```
 
-Decisiones:
+Decisions:
 
-- Token via query string por limitaciones del navegador con WebSocket headers.
-- La membresia se valida al conectar y antes de cada mensaje.
-- El cliente manda `client_message_id`; el backend deriva `sender_id` del JWT.
-- Broadcast se limita al `room_id`.
-- Si la sala se elimina, conexiones activas de esa sala se cierran.
+- Token is passed through the query string because browser WebSocket headers are limited.
+- Membership is validated on connect and before every message.
+- The client sends `client_message_id`; the backend derives `sender_id` from JWT.
+- Broadcast is limited to `room_id`.
+- If the room is deleted, active connections for that room are closed.
 
-Referencia: [websocket.md](websocket.md).
+Reference: [websocket.md](websocket.md).
 
-## Seguridad
+## Security
 
-Controles actuales:
+Current controls:
 
-- JWT bearer para rutas protegidas.
-- `get_current_user` centraliza validacion de token.
-- Password hashing antes de persistir usuarios.
-- `JWT_SECRET_KEY` obligatorio distinto del default en produccion.
-- CORS configurable por entorno.
-- Validacion de membresia activa para leer/enviar mensajes.
-- El cliente no puede definir `sender_id`.
-- Rate limiting en registro, login y envio de mensajes.
-- Idempotencia para evitar duplicados en retries.
-- Logging de fallos relevantes sin exponer secretos.
+- JWT bearer for protected routes.
+- `get_current_user` centralizes token validation.
+- Password hashing before users are persisted.
+- `JWT_SECRET_KEY` must differ from the default in production.
+- CORS is configurable by environment.
+- Active membership validation for reading/sending messages.
+- The client cannot define `sender_id`.
+- Rate limiting on registration, login, and message sending.
+- Idempotency to avoid duplicates on retries.
+- Logging for relevant failures without exposing secrets.
 
-Riesgos/pendientes para produccion:
+Production risks/pending work:
 
-- Usar HTTPS obligatorio delante de API y frontend.
-- Usar un secreto JWT fuerte y rotacion planificada.
-- Usar Redis para rate limiting en despliegues multi-instancia.
-- Revisar politicas de expiracion/revocacion de tokens.
-- Agregar observabilidad centralizada de logs y metricas.
+- Require HTTPS in front of the API and frontend.
+- Use a strong JWT secret and planned rotation.
+- Use Redis for rate limiting in multi-instance deployments.
+- Review token expiration/revocation policies.
+- Add centralized logs and metrics.
 
-## Escalabilidad Y Disponibilidad
+## Scalability And Availability
 
-Estado actual:
+Current state:
 
-- API stateless para REST.
-- WebSocket mantiene estado en memoria por proceso.
-- Rate limiting usa `memory://` por defecto.
-- Postgres es la fuente de verdad.
+- API is stateless for REST.
+- WebSocket keeps in-memory state per process.
+- Rate limiting uses `memory://` by default.
+- Postgres is the source of truth.
 
-Implicaciones:
+Implications:
 
-- Escalar REST horizontalmente es directo si todos los procesos comparten la misma DB.
-- Escalar WebSocket requiere sticky sessions o un pub/sub compartido para broadcast cross-instance.
-- Con `memory://`, cada instancia aplica rate limit de forma independiente.
-- Para produccion multi-instancia, usar Redis para rate limit y posiblemente pub/sub realtime.
+- Scaling REST horizontally is straightforward if all processes share the same DB.
+- Scaling WebSocket requires sticky sessions or shared pub/sub for cross-instance broadcast.
+- With `memory://`, each instance enforces rate limits independently.
+- For production multi-instance deployments, use Redis for rate limiting and possibly realtime pub/sub.
 
-Evolucion recomendada:
+Recommended evolution:
 
 ```text
 Single instance
@@ -350,42 +350,42 @@ Single instance
   -> Metrics/tracing/log aggregation
 ```
 
-## Consistencia Y Concurrencia
+## Consistency And Concurrency
 
-Mensajes:
+Messages:
 
-- Persistencia ocurre antes del broadcast.
-- El mensaje emitido por WebSocket ya existe en DB.
-- Idempotencia protege retries REST y WebSocket.
-- Constraint unico en DB protege carreras concurrentes con la misma key.
+- Persistence happens before broadcast.
+- A message emitted through WebSocket already exists in DB.
+- Idempotency protects REST and WebSocket retries.
+- A unique DB constraint protects concurrent races with the same key.
 
-Membresia:
+Membership:
 
-- Se revalida en cada `message.create`.
-- Un usuario que hizo `leave` deja de poder leer/enviar.
-- Sockets abiertos pierden acceso en el siguiente envio y reciben cierre `1008`.
+- Revalidated on every `message.create`.
+- A user who leaves can no longer read/send.
+- Open sockets lose access on the next send and receive close `1008`.
 
-## Observabilidad
+## Observability
 
-Actual:
+Current:
 
-- Logs estructurados para auth fallida, conflictos de idempotencia, errores WebSocket y health DB.
-- `/health` para liveness sin DB.
-- `/health/db` para readiness con `SELECT 1`.
+- Structured logs for failed auth, idempotency conflicts, WebSocket errors, and DB health.
+- `/health` for liveness without DB.
+- `/health/db` for readiness with `SELECT 1`.
 
-Recomendado:
+Recommended:
 
 - Correlation/request IDs.
-- Metricas de latencia por endpoint.
-- Contadores de `message.created`, errores WebSocket y rate limits.
-- Dashboard de conexiones WebSocket activas por sala/instancia.
+- Latency metrics by endpoint.
+- Counters for `message.created`, WebSocket errors, and rate limits.
+- Dashboard for active WebSocket connections by room/instance.
 
-## Deployment Local
+## Local Deployment
 
-Docker Compose levanta:
+Docker Compose starts:
 
 - `postgres`: Postgres 17.
-- `api`: FastAPI, Alembic upgrade y Uvicorn.
+- `api`: FastAPI, Alembic upgrade, and Uvicorn.
 - `frontend`: Vite dev server.
 
 ```mermaid
@@ -394,18 +394,18 @@ flowchart LR
   API --> Postgres["postgres:5432"]
 ```
 
-El contenedor API espera el health check de Postgres antes de iniciar.
+The API container waits for the Postgres health check before starting.
 
-## Tradeoffs Actuales
+## Current Tradeoffs
 
-- Offset pagination es simple, pero cursor pagination seria mejor para historial grande.
-- WebSocket in-memory es suficiente para una instancia, pero no para broadcast multi-instancia.
-- Rate limit in-memory es comodo en desarrollo, pero Redis es necesario si hay replicas.
-- No hay UI optimista para mensajes; reduce duplicados, pero puede sentirse menos instantaneo.
-- REST y WebSocket usan contadores de rate limit separados para el mismo usuario/sala.
-- No hay busqueda de mensajes ni read receipts.
+- Offset pagination is simple, but cursor pagination would be better for large history.
+- In-memory WebSocket state is enough for one instance, but not for multi-instance broadcast.
+- In-memory rate limiting is convenient in development, but Redis is needed with replicas.
+- There is no optimistic UI for messages; this reduces duplicates, but can feel less instant.
+- REST and WebSocket use separate rate limit counters for the same user/room.
+- There is no message search or read receipts.
 
-## Referencias
+## References
 
 - [folder-architecture.md](folder-architecture.md)
 - [design-patterns.md](design-patterns.md)

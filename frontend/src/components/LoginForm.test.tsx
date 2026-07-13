@@ -20,9 +20,9 @@ describe('LoginForm', () => {
 
     renderWithAuth(<LoginForm />, { login })
 
-    await userEvent.type(screen.getByLabelText('Usuario'), 'ada')
-    await userEvent.type(screen.getByLabelText('Contraseña'), 'password123')
-    await userEvent.click(screen.getByRole('button', { name: 'Ingresar' }))
+    await userEvent.type(screen.getByLabelText('Username'), 'ada')
+    await userEvent.type(screen.getByLabelText('Password'), 'password123')
+    await userEvent.click(screen.getByRole('button', { name: 'Log in' }))
 
     await waitFor(() => {
       expect(loginRequest).toHaveBeenCalledWith('ada', 'password123')
@@ -31,15 +31,15 @@ describe('LoginForm', () => {
   })
 
   it('shows API errors', async () => {
-    vi.mocked(loginRequest).mockRejectedValue(new ApiError('Credenciales invalidas', 401))
+    vi.mocked(loginRequest).mockRejectedValue(new ApiError('Invalid credentials', 401))
 
     renderWithAuth(<LoginForm />)
 
-    await userEvent.type(screen.getByLabelText('Usuario'), 'ada')
-    await userEvent.type(screen.getByLabelText('Contraseña'), 'bad-password')
-    await userEvent.click(screen.getByRole('button', { name: 'Ingresar' }))
+    await userEvent.type(screen.getByLabelText('Username'), 'ada')
+    await userEvent.type(screen.getByLabelText('Password'), 'bad-password')
+    await userEvent.click(screen.getByRole('button', { name: 'Log in' }))
 
-    expect(await screen.findByText('Credenciales invalidas')).toBeInTheDocument()
+    expect(await screen.findByText('Invalid credentials')).toBeInTheDocument()
   })
 })
 

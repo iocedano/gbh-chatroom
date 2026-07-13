@@ -8,12 +8,12 @@ describe('MessageInput', () => {
     const onSend = vi.fn().mockResolvedValue(undefined)
     render(<MessageInput onSend={onSend} />)
 
-    await userEvent.type(screen.getByPlaceholderText('Escribe un mensaje...'), '  hola  ')
-    await userEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+    await userEvent.type(screen.getByPlaceholderText('Type a message...'), '  hello  ')
+    await userEvent.click(screen.getByRole('button', { name: 'Send' }))
 
     await waitFor(() => {
-      expect(onSend).toHaveBeenCalledWith('hola')
-      expect(screen.getByPlaceholderText('Escribe un mensaje...')).toHaveValue('')
+      expect(onSend).toHaveBeenCalledWith('hello')
+      expect(screen.getByPlaceholderText('Type a message...')).toHaveValue('')
     })
   })
 
@@ -21,28 +21,28 @@ describe('MessageInput', () => {
     const onSend = vi.fn().mockResolvedValue(undefined)
     render(<MessageInput onSend={onSend} />)
 
-    await userEvent.type(screen.getByPlaceholderText('Escribe un mensaje...'), '   ')
+    await userEvent.type(screen.getByPlaceholderText('Type a message...'), '   ')
 
-    expect(screen.getByRole('button', { name: 'Enviar' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled()
     expect(onSend).not.toHaveBeenCalled()
   })
 
   it('shows send errors and keeps the message', async () => {
-    const onSend = vi.fn().mockRejectedValue(new Error('No conectado'))
+    const onSend = vi.fn().mockRejectedValue(new Error('Not connected'))
     render(<MessageInput onSend={onSend} />)
 
-    await userEvent.type(screen.getByPlaceholderText('Escribe un mensaje...'), 'hola')
-    await userEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+    await userEvent.type(screen.getByPlaceholderText('Type a message...'), 'hello')
+    await userEvent.click(screen.getByRole('button', { name: 'Send' }))
 
-    expect(await screen.findByText('No conectado')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Escribe un mensaje...')).toHaveValue('hola')
+    expect(await screen.findByText('Not connected')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Type a message...')).toHaveValue('hello')
   })
 
   it('respects the disabled state', () => {
     render(<MessageInput onSend={vi.fn()} disabled />)
 
-    expect(screen.getByPlaceholderText('Escribe un mensaje...')).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Enviar' })).toBeDisabled()
+    expect(screen.getByPlaceholderText('Type a message...')).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Send' })).toBeDisabled()
     expect(screen.getByText('0/1000')).toBeInTheDocument()
   })
 })

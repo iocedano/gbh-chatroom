@@ -30,7 +30,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 function SessionLoading() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 text-sm text-gray-500">
-      Cargando sesión...
+      Loading session...
     </div>
   )
 }

@@ -18,7 +18,7 @@ export const authFixture: StoredAuth = {
 export const messageFixture: Message = {
   id: 10,
   client_message_id: 'client-10',
-  content: 'Hola',
+  content: 'Hello',
   room_id: 2,
   sender_id: userFixture.id,
   sender_username: userFixture.username,

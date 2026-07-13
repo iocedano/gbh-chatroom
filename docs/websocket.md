@@ -1,19 +1,19 @@
 # WebSocket Messaging
 
-Este documento describe el contrato y los detalles tecnicos de la mensajeria en tiempo real para backend y frontend.
+This document describes the contract and technical details for realtime messaging in the backend and frontend.
 
-## Objetivo
+## Goal
 
-El chat usa WebSocket para enviar y recibir mensajes en tiempo real por sala. El historial inicial sigue cargandose por REST, y los mensajes nuevos se envian por WebSocket.
+The chat uses WebSocket to send and receive realtime messages per room. Initial history still loads over REST, and new messages are sent over WebSocket.
 
-Flujo general:
+General flow:
 
-1. El cliente entra a la sala por REST.
-2. El cliente carga historial por REST.
-3. El cliente abre `WS /rooms/{room_id}/ws?token=<access_token>`.
-4. El cliente envia eventos `message.create`.
-5. El backend persiste el mensaje.
-6. El backend emite `message.created` a las conexiones activas de esa sala.
+1. The client enters the room through REST.
+2. The client loads history through REST.
+3. The client opens `WS /rooms/{room_id}/ws?token=<access_token>`.
+4. The client sends `message.create` events.
+5. The backend persists the message.
+6. The backend emits `message.created` to the active connections in that room.
 
 ## Endpoint
 
@@ -21,59 +21,59 @@ Flujo general:
 WS /rooms/{room_id}/ws?token=<access_token>
 ```
 
-`token` debe ser el JWT retornado por login. Se envia por query string porque `WebSocket` en navegador no permite configurar facilmente el header `Authorization`.
+`token` must be the JWT returned by login. It is sent through the query string because browser `WebSocket` does not make it easy to configure the `Authorization` header.
 
-## Autenticacion y Autorizacion
+## Authentication And Authorization
 
-El backend usa el JWT existente como fuente de autenticidad:
+The backend uses the existing JWT as the source of authenticity:
 
-- Decodifica `token` con `decode_access_token`.
-- Lee `sub` y lo convierte en `user_id`.
-- Busca el usuario autenticado.
-- Valida que el usuario sea miembro activo del room.
-- Acepta la conexion solo si las validaciones pasan.
+- Decodes `token` with `decode_access_token`.
+- Reads `sub` and converts it to `user_id`.
+- Loads the authenticated user.
+- Validates that the user is an active member of the room.
+- Accepts the connection only if all validations pass.
 
-El cliente nunca envia `sender_id`. El backend siempre deriva `sender_id` del JWT.
+The client never sends `sender_id`. The backend always derives `sender_id` from the JWT.
 
-La membresia activa se valida dos veces:
+Active membership is validated twice:
 
-- Antes de aceptar el WebSocket.
-- Antes de procesar cada `message.create`.
+- Before accepting the WebSocket.
+- Before processing every `message.create`.
 
-Esto cubre el caso donde un usuario abre un WebSocket valido y luego deja la sala desde otra pestana, otro dispositivo o una llamada REST.
+This covers the case where a user opens a valid WebSocket and then leaves the room from another tab, another device, or a REST call.
 
-Si el usuario deja la sala mientras el socket sigue abierto:
+If the user leaves the room while the socket remains open:
 
-1. El siguiente `message.create` revalida membresia.
-2. El backend emite `error` con `code = "membership_required"`.
-3. El backend cierra el socket con codigo `1008`.
-4. El endpoint remueve la conexion del connection manager.
+1. The next `message.create` revalidates membership.
+2. The backend emits an `error` with `code = "membership_required"`.
+3. The backend closes the socket with code `1008`.
+4. The endpoint removes the connection from the connection manager.
 
-Si el creador elimina una sala con sockets activos, el backend cierra las conexiones activas de esa sala con codigo `1008` y remueve el room del connection manager.
+If the creator deletes a room with active sockets, the backend closes the active connections for that room with code `1008` and removes the room from the connection manager.
 
 ## `client_message_id`
 
-WebSocket usa un `client_message_id` generado por el cliente para deduplicar retries.
+WebSocket uses a client-generated `client_message_id` to deduplicate retries.
 
-No se usa el `id` de base de datos para esto porque ese ID se conoce solamente despues de persistir el mensaje. El `client_message_id` existe antes del envio, se mantiene estable durante retries, y representa una operacion logica de envio.
+The database `id` is not used for this because that ID is known only after the message is persisted. `client_message_id` exists before sending, stays stable during retries, and represents one logical send operation.
 
-Terminologia:
+Terminology:
 
-- `id`: ID canonico del mensaje generado por la base de datos.
-- `client_message_id`: UUID generado por el cliente antes de enviar.
-- `idempotency_key`: columna existente donde se almacena `client_message_id` para WebSocket.
+- `id`: canonical message ID generated by the database.
+- `client_message_id`: UUID generated by the client before sending.
+- `idempotency_key`: existing column where WebSocket stores `client_message_id`.
 
-Reglas:
+Rules:
 
-- Mismo `room_id + sender_id + client_message_id` con mismo contenido: retorna/publica el mensaje existente.
-- Mismo `room_id + sender_id + client_message_id` con contenido distinto: error de conflicto.
-- Mismo contenido con distinto `client_message_id`: crea mensajes distintos.
+- Same `room_id + sender_id + client_message_id` with the same content: returns/publishes the existing message.
+- Same `room_id + sender_id + client_message_id` with different content: conflict error.
+- Same content with a different `client_message_id`: creates different messages.
 
-## Eventos
+## Events
 
-### Enviar Mensaje
+### Send Message
 
-Cliente -> servidor:
+Client -> server:
 
 ```json
 {
@@ -83,9 +83,9 @@ Cliente -> servidor:
 }
 ```
 
-### Mensaje Creado
+### Message Created
 
-Servidor -> clientes del mismo room:
+Server -> clients in the same room:
 
 ```json
 {
@@ -102,11 +102,11 @@ Servidor -> clientes del mismo room:
 }
 ```
 
-El backend persiste el mensaje antes de emitir `message.created`.
+The backend persists the message before emitting `message.created`.
 
 ### Error
 
-Servidor -> cliente:
+Server -> client:
 
 ```json
 {
@@ -119,7 +119,7 @@ Servidor -> cliente:
 }
 ```
 
-Codigos actuales:
+Current codes:
 
 - `invalid_json`
 - `invalid_payload`
@@ -131,26 +131,26 @@ Codigos actuales:
 - `room_not_found`
 - `membership_required`
 
-`message.create` esta limitado por usuario y sala. Cuando se excede el limite, el backend emite `error` con `code = "rate_limit_exceeded"` y no persiste el mensaje.
+`message.create` is limited by user and room. When the limit is exceeded, the backend emits an `error` with `code = "rate_limit_exceeded"` and does not persist the message.
 
-Ver [docs/rate-limiting.md](rate-limiting.md) para el patron completo, configuracion y comportamiento en REST y WebSocket.
+See [rate-limiting.md](rate-limiting.md) for the full pattern, configuration, and REST/WebSocket behavior.
 
 ## Backend
 
-Archivos principales:
+Main files:
 
-- `app/api/routes/websocket.py`: capa de transporte WebSocket.
-- `app/services/realtime.py`: autenticacion, autorizacion, parsing logico de eventos y construccion de payloads.
-- `app/services/messages.py`: persistencia realtime mediante `create_realtime_message`.
-- `app/sockets/connection_manager.py`: conexiones activas agrupadas por `room_id`.
+- `app/api/routes/websocket.py`: WebSocket transport layer.
+- `app/services/realtime.py`: authentication, authorization, logical event parsing, and payload construction.
+- `app/services/messages.py`: realtime persistence through `create_realtime_message`.
+- `app/sockets/connection_manager.py`: active connections grouped by `room_id`.
 
-Responsabilidades:
+Responsibilities:
 
-- El router recibe la conexion, lee eventos, envia errores, cierra sockets y delega logica de dominio.
-- `realtime.py` valida JWT, membresia, evento `message.create` y traduce errores de dominio a eventos realtime.
-- El connection manager mantiene conexiones por sala y hace broadcast solamente dentro del mismo `room_id`.
+- The router receives the connection, reads events, sends errors, closes sockets, and delegates domain logic.
+- `realtime.py` validates JWT, membership, the `message.create` event, and translates domain errors into realtime events.
+- The connection manager keeps connections by room and broadcasts only inside the same `room_id`.
 
-Flujo de `message.create`:
+`message.create` flow:
 
 ```text
 receive JSON
@@ -164,24 +164,24 @@ persist message
 broadcast message.created to room
 ```
 
-## Sanitizacion de Contenido
+## Content Sanitization
 
-REST y WebSocket usan el schema `MessageCreate`:
+REST and WebSocket use the `MessageCreate` schema:
 
-- `content` se recorta con `strip()`.
-- Mensajes vacios o solo whitespace se rechazan.
-- El maximo permitido es 1000 caracteres.
-- HTML se almacena como texto literal en backend. Los clientes deben renderizarlo como texto o escaparlo antes de insertarlo en HTML.
+- `content` is trimmed with `strip()`.
+- Empty or whitespace-only messages are rejected.
+- The maximum allowed length is 1000 characters.
+- HTML is stored as literal text in the backend. Clients must render it as text or escape it before inserting it into HTML.
 
 ## Frontend
 
-Archivos principales:
+Main files:
 
-- `frontend/src/api/websocket.ts`: construccion de URL WebSocket.
-- `frontend/src/hooks/useRoomWebSocket.ts`: ciclo de vida del socket y envio de mensajes.
-- `frontend/src/pages/ChatPage.tsx`: carga historial, habilita WebSocket e integra mensajes entrantes.
-- `frontend/src/components/MessageList.tsx`: render de mensajes, `sender_username` y auto-scroll basico.
-- `frontend/src/types/index.ts`: tipos de mensajes y eventos WebSocket.
+- `frontend/src/api/websocket.ts`: WebSocket URL construction.
+- `frontend/src/hooks/useRoomWebSocket.ts`: socket lifecycle and message sending.
+- `frontend/src/pages/ChatPage.tsx`: loads history, enables WebSocket, and integrates incoming messages.
+- `frontend/src/components/MessageList.tsx`: renders messages, `sender_username`, and basic auto-scroll.
+- `frontend/src/types/index.ts`: message and WebSocket event types.
 
 Variables:
 
@@ -189,56 +189,56 @@ Variables:
 VITE_WS_URL=ws://localhost:8000
 ```
 
-Si `VITE_WS_URL` no existe, el frontend deriva la URL desde `VITE_API_URL`:
+If `VITE_WS_URL` does not exist, the frontend derives the URL from `VITE_API_URL`:
 
 - `http://localhost:8000` -> `ws://localhost:8000`
 - `https://api.example.com` -> `wss://api.example.com`
 
-Flujo en `ChatPage`:
+Flow in `ChatPage`:
 
-1. Validar `roomId`.
-2. Ejecutar `joinRoom(roomId)`.
-3. Cargar historial con `listMessages(roomId)`.
-4. Abrir WebSocket cuando no hay loading ni error.
-5. Deshabilitar input hasta que el socket este conectado.
-6. Enviar mensajes por `useRoomWebSocket.sendMessage`.
-7. Agregar mensajes al estado solo al recibir `message.created`.
-8. Deduplicar mensajes por `id`.
+1. Validate `roomId`.
+2. Run `joinRoom(roomId)`.
+3. Load history with `listMessages(roomId)`.
+4. Open WebSocket when there is no loading or error state.
+5. Disable input until the socket is connected.
+6. Send messages through `useRoomWebSocket.sendMessage`.
+7. Add messages to state only after receiving `message.created`.
+8. Deduplicate messages by `id`.
 
-El frontend no hace UI optimista en el primer corte. Esto evita duplicados y mantiene el UI alineado con mensajes ya persistidos.
+The frontend does not use optimistic UI in the first version. This avoids duplicates and keeps the UI aligned with messages already persisted.
 
-## Username en Mensajes
+## Username In Messages
 
-El evento WebSocket `message.created` y el historial REST `GET /rooms/{room_id}/messages` incluyen `sender_username`.
+The WebSocket `message.created` event and REST history endpoint `GET /rooms/{room_id}/messages` include `sender_username`.
 
-El frontend puede seguir usando un fallback defensivo si recibe mensajes antiguos o payloads incompletos:
+The frontend can keep a defensive fallback if it receives old messages or incomplete payloads:
 
 ```ts
-message.sender_username ?? `Usuario #${message.sender_id}`
+message.sender_username ?? `User #${message.sender_id}`
 ```
 
-## QA Manual
+## Manual QA
 
 Backend:
 
-- Conectar sin token: rechazo.
-- Conectar con token invalido: rechazo.
-- Usuario no miembro no puede conectar.
-- Usuario miembro puede conectar.
-- Mensaje valido se persiste antes de broadcast.
-- Dos conexiones en el mismo room reciben `message.created`.
-- Conexion en otro room no recibe mensajes de esta sala.
-- Retry con mismo `client_message_id` y mismo contenido no duplica.
-- Retry con mismo `client_message_id` y otro contenido devuelve conflicto.
-- Enviar por encima del limite devuelve `rate_limit_exceeded`.
-- Desconexion limpia la conexion sin romper otros broadcasts.
+- Connect without token: rejected.
+- Connect with invalid token: rejected.
+- Non-member user cannot connect.
+- Member user can connect.
+- Valid message is persisted before broadcast.
+- Two connections in the same room receive `message.created`.
+- Connection in another room does not receive messages from this room.
+- Retry with the same `client_message_id` and same content does not duplicate.
+- Retry with the same `client_message_id` and different content returns conflict.
+- Sending above the limit returns `rate_limit_exceeded`.
+- Disconnect cleans up the connection without breaking other broadcasts.
 
 Frontend:
 
-- Login con dos usuarios.
-- Ambos entran a la misma sala.
-- Usuario A envia mensaje.
-- Usuario B lo ve sin refrescar.
-- Usuario A tambien ve confirmacion por evento.
-- Al refrescar, el historial REST contiene los mensajes enviados por WebSocket.
-- Salir de sala desde otra pestana y luego intentar enviar: se muestra error/cierre por membresia.
+- Log in with two users.
+- Both enter the same room.
+- User A sends a message.
+- User B sees it without refreshing.
+- User A also sees confirmation through the event.
+- After refresh, REST history contains messages sent through WebSocket.
+- Leave the room from another tab and then try to send: membership error/close is shown.

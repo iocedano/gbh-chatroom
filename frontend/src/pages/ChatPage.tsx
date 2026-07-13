@@ -23,7 +23,7 @@ export function ChatPage() {
 
   const loadMessages = useCallback(async () => {
     if (!Number.isInteger(parsedRoomId) || parsedRoomId <= 0) {
-      setError('Sala inválida')
+      setError('Invalid room')
       setLoading(false)
       return
     }
@@ -41,7 +41,7 @@ export function ChatPage() {
         navigate('/', { replace: true })
         return
       }
-      const message = err instanceof ApiError ? err.message : 'No se pudo cargar el chat'
+      const message = err instanceof ApiError ? err.message : 'Could not load chat'
       setError(message)
     } finally {
       setLoading(false)
@@ -92,7 +92,7 @@ export function ChatPage() {
         navigate('/', { replace: true })
         return
       }
-      const message = err instanceof ApiError ? err.message : 'No se pudo salir de la sala'
+      const message = err instanceof ApiError ? err.message : 'Could not leave room'
       setError(message)
     } finally {
       setLeaving(false)
@@ -105,9 +105,9 @@ export function ChatPage() {
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
             <Link to="/rooms" className="text-sm text-blue-600 hover:text-blue-700">
-              ← Salas
+              ← Rooms
             </Link>
-            <h1 className="text-xl font-semibold text-gray-900">Sala #{parsedRoomId}</h1>
+            <h1 className="text-xl font-semibold text-gray-900">Room #{parsedRoomId}</h1>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -116,7 +116,7 @@ export function ChatPage() {
               disabled={loading || leaving}
               className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Actualizar
+              Refresh
             </button>
             <button
               type="button"
@@ -124,7 +124,7 @@ export function ChatPage() {
               disabled={loading || leaving}
               className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {leaving ? 'Saliendo...' : 'Salir de la sala'}
+              {leaving ? 'Leaving...' : 'Leave room'}
             </button>
           </div>
         </div>
@@ -136,10 +136,10 @@ export function ChatPage() {
         {!loading && !error && (
           <p className="text-xs text-gray-500">
             {websocketStatus === 'connected'
-              ? 'Conectado en tiempo real'
+              ? 'Connected in real time'
               : websocketStatus === 'connecting'
-                ? 'Conectando chat en tiempo real...'
-                : 'Chat en tiempo real desconectado'}
+                ? 'Connecting to real-time chat...'
+                : 'Real-time chat disconnected'}
           </p>
         )}
         <MessageList messages={messages} currentUserId={user?.id ?? null} loading={loading} />

@@ -166,7 +166,7 @@ Rate limiting and idempotency solve different problems:
 - **Rate limiting** protects the API from abusive volume.
 - **Idempotency** protects legitimate retries from creating duplicate messages.
 
-See [docs/idempotency.md](idempotency.md) for the full idempotency contract.
+See [idempotency.md](idempotency.md) for the full idempotency contract.
 
 Important behavior today:
 

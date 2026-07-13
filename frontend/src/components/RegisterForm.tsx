@@ -20,7 +20,7 @@ export function RegisterForm() {
       const response = await registerRequest(username, password)
       login({ token: response.access_token, user: response.user })
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : 'No se pudo registrar'
+      const message = err instanceof ApiError ? err.message : 'Could not register'
       setError(message)
     } finally {
       setLoading(false)
@@ -32,7 +32,7 @@ export function RegisterForm() {
       <ErrorBanner message={error} />
       <div>
         <label htmlFor="register-username" className="mb-1 block text-sm font-medium text-gray-700">
-          Usuario
+          Username
         </label>
         <input
           id="register-username"
@@ -47,7 +47,7 @@ export function RegisterForm() {
       </div>
       <div>
         <label htmlFor="register-password" className="mb-1 block text-sm font-medium text-gray-700">
-          Contraseña
+          Password
         </label>
         <input
           id="register-password"
@@ -65,7 +65,7 @@ export function RegisterForm() {
         disabled={loading}
         className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
       >
-        {loading ? 'Registrando...' : 'Crear cuenta'}
+        {loading ? 'Signing up...' : 'Create account'}
       </button>
     </form>
   )

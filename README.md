@@ -1,38 +1,40 @@
 # GBH Chat
 
-GBH Chat es una app de chat con API FastAPI, Postgres, migraciones Alembic, frontend React/Vite y mensajeria en tiempo real por WebSocket.
+GBH Chat is a chat application with a FastAPI API, Postgres, Alembic migrations, a React/Vite frontend, and realtime messaging over WebSocket.
 
-## Requisitos
+Spanish documentation lives in [docs/es/README.md](docs/es/README.md).
 
-- Docker y Docker Compose para correr todo el stack.
-- Python 3.13 si corres la API fuera de Docker.
-- Node.js y npm si corres el frontend fuera de Docker.
+## Requirements
 
-## Setup Rapido Con Docker
+- Docker and Docker Compose to run the full stack.
+- Python 3.13 if you run the API outside Docker.
+- Node.js and npm if you run the frontend outside Docker.
 
-Desde la raiz del repo:
+## Quick Setup With Docker
+
+From the repository root:
 
 ```sh
 docker compose up --build
 ```
 
-Servicios:
+Services:
 
 - API: `http://localhost:8000`
 - Frontend: `http://localhost:5173`
 - Postgres: `localhost:5432`
 
-El contenedor de API ejecuta migraciones antes de iniciar Uvicorn.
+The API container runs migrations before starting Uvicorn.
 
-## Setup Local
+## Local Setup
 
-Levanta Postgres con Docker si quieres correr API y frontend en tu maquina:
+Start Postgres with Docker if you want to run the API and frontend on your machine:
 
 ```sh
 docker compose up postgres
 ```
 
-API local:
+Local API:
 
 ```sh
 cd app
@@ -43,7 +45,7 @@ alembic -c alembic.ini upgrade head
 uvicorn main:app --reload
 ```
 
-Frontend local:
+Local frontend:
 
 ```sh
 cd frontend
@@ -51,93 +53,93 @@ npm install
 npm run dev
 ```
 
-Variables utiles del frontend:
+Useful frontend variables:
 
 ```text
 VITE_API_URL=http://localhost:8000
 VITE_WS_URL=ws://localhost:8000
 ```
 
-Si `VITE_WS_URL` no existe, el frontend deriva `ws://` o `wss://` desde `VITE_API_URL`.
+If `VITE_WS_URL` is not set, the frontend derives `ws://` or `wss://` from `VITE_API_URL`.
 
-## Variables De Entorno
+## Environment Variables
 
-La API lee variables desde el entorno o desde `app/.env`.
+The API reads variables from the environment or from `app/.env`.
 
-| Variable | Default | Uso |
+| Variable | Default | Purpose |
 | --- | --- | --- |
-| `APP_ENV` | `development` | Entorno: `development`, `staging` o `production` |
-| `DATABASE_URL` | `postgresql+psycopg2://chat_user:chat_password@localhost:5432/chat_app` | URL SQLAlchemy de Postgres |
-| `JWT_SECRET_KEY` | `change-me-in-development` | Secreto para firmar JWT. Debe cambiar en produccion |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | `60` | Minutos de vigencia del token |
-| `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Lista JSON o separada por comas |
-| `MESSAGE_RATE_LIMIT_MAX_EVENTS` | `20` | Mensajes permitidos por ventana |
-| `MESSAGE_RATE_LIMIT_WINDOW_SECONDS` | `60` | Ventana de rate limit de mensajes |
-| `AUTH_RATE_LIMIT_MAX_EVENTS` | `10` | Intentos de registro/login por ventana y username |
-| `AUTH_RATE_LIMIT_WINDOW_SECONDS` | `60` | Ventana de rate limit de auth |
-| `RATE_LIMIT_STORAGE_URI` | `memory://` | Storage de `limits`; usa Redis en despliegues multi-instancia |
-| `RATE_LIMIT_STRATEGY` | `moving-window` | `fixed-window`, `moving-window` o `sliding-window-counter` |
+| `APP_ENV` | `development` | Environment: `development`, `staging`, or `production` |
+| `DATABASE_URL` | `postgresql+psycopg2://chat_user:chat_password@localhost:5432/chat_app` | Postgres SQLAlchemy URL |
+| `JWT_SECRET_KEY` | `change-me-in-development` | Secret used to sign JWTs. Must be changed in production |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | `60` | Token lifetime in minutes |
+| `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | JSON or comma-separated list |
+| `MESSAGE_RATE_LIMIT_MAX_EVENTS` | `20` | Messages allowed per window |
+| `MESSAGE_RATE_LIMIT_WINDOW_SECONDS` | `60` | Message rate limit window |
+| `AUTH_RATE_LIMIT_MAX_EVENTS` | `10` | Register/login attempts per window and username |
+| `AUTH_RATE_LIMIT_WINDOW_SECONDS` | `60` | Auth rate limit window |
+| `RATE_LIMIT_STORAGE_URI` | `memory://` | `limits` storage; use Redis for multi-instance deployments |
+| `RATE_LIMIT_STRATEGY` | `moving-window` | `fixed-window`, `moving-window`, or `sliding-window-counter` |
 
-## Migraciones
+## Migrations
 
-Aplicar migraciones desde la raiz:
+Apply migrations from the repository root:
 
 ```sh
 alembic -c app/alembic.ini upgrade head
 ```
 
-O desde `app/`:
+Or from `app/`:
 
 ```sh
 alembic -c alembic.ini upgrade head
 ```
 
-Crear una migracion nueva despues de cambiar modelos:
+Create a new migration after changing models:
 
 ```sh
 cd app
 alembic -c alembic.ini revision --autogenerate -m "describe_change"
 ```
 
-Revisa siempre el archivo generado antes de aplicarlo.
+Always review the generated file before applying it.
 
 ## Tests
 
-Suite backend completa:
+Full backend suite:
 
 ```sh
 cd app
 pytest
 ```
 
-Tambien puedes correr un archivo puntual:
+You can also run a specific file:
 
 ```sh
 cd app
 pytest tests/test_messages.py
 ```
 
-## Autenticacion
+## Authentication
 
-Las rutas protegidas usan:
+Protected routes use:
 
 ```http
 Authorization: Bearer <access_token>
 ```
 
-Errores comunes:
+Common errors:
 
-- `401 Unauthorized`: token ausente, invalido o credenciales incorrectas.
-- `422 Unprocessable Entity`: payload no cumple el schema.
-- `429 Too Many Requests`: limite de auth o mensajes excedido.
+- `401 Unauthorized`: missing token, invalid token, or incorrect credentials.
+- `422 Unprocessable Entity`: payload does not match the schema.
+- `429 Too Many Requests`: auth or message limit exceeded.
 
-## Contratos REST
+## REST Contracts
 
-Los ejemplos usan ISO 8601 para campos `created_at` y `joined_at`.
+Examples use ISO 8601 for `created_at` and `joined_at` fields.
 
 ### `POST /auth/register`
 
-Auth: no requerida.
+Auth: not required.
 
 Body:
 
@@ -162,11 +164,11 @@ Response `201`:
 }
 ```
 
-Errores: `409` si el username ya existe, `422` por payload invalido, `429` por rate limit.
+Errors: `409` if the username already exists, `422` for invalid payload, `429` for rate limiting.
 
 ### `POST /auth/login`
 
-Auth: no requerida.
+Auth: not required.
 
 Body:
 
@@ -177,13 +179,13 @@ Body:
 }
 ```
 
-Response `200`: mismo shape que registro.
+Response `200`: same shape as registration.
 
-Errores: `401` por credenciales invalidas, `422` por payload invalido, `429` por rate limit.
+Errors: `401` for invalid credentials, `422` for invalid payload, `429` for rate limiting.
 
 ### `GET /users/me`
 
-Auth: requerida.
+Auth: required.
 
 Response `200`:
 
@@ -195,11 +197,11 @@ Response `200`:
 }
 ```
 
-Errores: `401`.
+Errors: `401`.
 
 ### `PATCH /users/me`
 
-Auth: requerida.
+Auth: required.
 
 Body:
 
@@ -210,23 +212,23 @@ Body:
 }
 ```
 
-Ambos campos son opcionales.
+Both fields are optional.
 
 Response `200`: `UserRead`.
 
-Errores: `401`, `409` si el username ya existe, `422`.
+Errors: `401`, `409` if the username already exists, `422`.
 
 ### `DELETE /users/me`
 
-Auth: requerida.
+Auth: required.
 
-Response `204`: sin body.
+Response `204`: no body.
 
-Errores: `401`.
+Errors: `401`.
 
 ### `GET /users`
 
-Auth: requerida.
+Auth: required.
 
 Query: `offset` default `0`, `limit` default `100`, max `100`.
 
@@ -242,19 +244,19 @@ Response `200`:
 ]
 ```
 
-Errores: `401`, `422` por query invalido.
+Errors: `401`, `422` for invalid query.
 
 ### `GET /users/{user_id}`
 
-Auth: requerida.
+Auth: required.
 
 Response `200`: `UserRead`.
 
-Errores: `401`, `404` si no existe.
+Errors: `401`, `404` if the user does not exist.
 
 ### `POST /rooms`
 
-Auth: requerida.
+Auth: required.
 
 Body:
 
@@ -275,29 +277,29 @@ Response `201`:
 }
 ```
 
-Errores: `401`, `409` si ya existe una sala con ese nombre, `422`.
+Errors: `401`, `409` if a room with that name already exists, `422`.
 
 ### `GET /rooms`
 
-Auth: requerida.
+Auth: required.
 
 Query: `offset` default `0`, `limit` default `100`, max `100`.
 
-Response `200`: lista de `ChatRoomRead`.
+Response `200`: list of `ChatRoomRead`.
 
-Errores: `401`, `422`.
+Errors: `401`, `422`.
 
 ### `GET /rooms/{room_id}`
 
-Auth: requerida.
+Auth: required.
 
 Response `200`: `ChatRoomRead`.
 
-Errores: `401`, `404`.
+Errors: `401`, `404`.
 
 ### `PATCH /rooms/{room_id}`
 
-Auth: requerida. Solo el creador puede editar.
+Auth: required. Only the creator can edit.
 
 Body:
 
@@ -309,19 +311,19 @@ Body:
 
 Response `200`: `ChatRoomRead`.
 
-Errores: `401`, `403`, `404`, `409`, `422`.
+Errors: `401`, `403`, `404`, `409`, `422`.
 
 ### `DELETE /rooms/{room_id}`
 
-Auth: requerida. Solo el creador puede eliminar.
+Auth: required. Only the creator can delete.
 
-Response `204`: sin body. Las conexiones WebSocket activas de esa sala se cierran.
+Response `204`: no body. Active WebSocket connections for that room are closed.
 
-Errores: `401`, `403`, `404`.
+Errors: `401`, `403`, `404`.
 
 ### `POST /rooms/{room_id}/join`
 
-Auth: requerida.
+Auth: required.
 
 Response `200`:
 
@@ -335,19 +337,19 @@ Response `200`:
 }
 ```
 
-Errores: `401`, `400` si ya es miembro activo, `404`.
+Errors: `401`, `400` if the user is already an active member, `404`.
 
 ### `POST /rooms/{room_id}/leave`
 
-Auth: requerida.
+Auth: required.
 
-Response `200`: `RoomMemberRead` con `left_at` informado.
+Response `200`: `RoomMemberRead` with `left_at` set.
 
-Errores: `401`, `400` si no es miembro activo, `404`.
+Errors: `401`, `400` if the user is not an active member, `404`.
 
 ### `POST /rooms/{room_id}/messages`
 
-Auth: requerida. Membresia activa requerida.
+Auth: required. Active membership required.
 
 Headers:
 
@@ -376,21 +378,21 @@ Response `201`:
 }
 ```
 
-Errores: `401`, `403` si no es miembro activo, `404`, `400` por idempotency key invalida, `409` si la key se reutiliza con otro contenido, `422` si falta `Idempotency-Key` o el payload es invalido, `429`.
+Errors: `401`, `403` if the user is not an active member, `404`, `400` for an invalid idempotency key, `409` if the key is reused with different content, `422` if `Idempotency-Key` is missing or the payload is invalid, `429`.
 
 ### `GET /rooms/{room_id}/messages`
 
-Auth: requerida. Membresia activa requerida.
+Auth: required. Active membership required.
 
 Query: `offset` default `0`, `limit` default `100`, max `100`.
 
-Response `200`: lista de `MessageRead`; cada mensaje incluye `sender_username`.
+Response `200`: list of `MessageRead`; each message includes `sender_username`.
 
-Errores: `401`, `403`, `404`, `422`.
+Errors: `401`, `403`, `404`, `422`.
 
 ### `GET /health`
 
-Auth: no requerida.
+Auth: not required.
 
 Response `200`:
 
@@ -400,11 +402,11 @@ Response `200`:
 }
 ```
 
-Liveness liviano; no consulta la base de datos.
+Lightweight liveness check; does not query the database.
 
 ### `GET /health/db`
 
-Auth: no requerida.
+Auth: not required.
 
 Response `200`:
 
@@ -414,20 +416,20 @@ Response `200`:
 }
 ```
 
-Readiness; ejecuta `SELECT 1`. Si la base falla, la API responde error `5xx`.
+Readiness check; runs `SELECT 1`. If the database fails, the API returns a `5xx` error.
 
-## Flujo End-To-End De Mensajes
+## End-To-End Message Flow
 
-1. Crear usuario con `POST /auth/register` o autenticar con `POST /auth/login`.
-2. Crear una sala con `POST /rooms` o unirse con `POST /rooms/{room_id}/join`.
-3. Cargar historial con `GET /rooms/{room_id}/messages`.
-4. Enviar por REST con `POST /rooms/{room_id}/messages` y un `Idempotency-Key` estable para retries.
-5. Abrir `WS /rooms/{room_id}/ws?token=<access_token>`.
-6. Enviar eventos `message.create` con `client_message_id`.
-7. Escuchar eventos `message.created` y deduplicar por `message.id`.
-8. Manejar errores WebSocket: `invalid_message`, `membership_required`, `rate_limit_exceeded` y `client_message_id_conflict`.
+1. Create a user with `POST /auth/register` or authenticate with `POST /auth/login`.
+2. Create a room with `POST /rooms` or join one with `POST /rooms/{room_id}/join`.
+3. Load history with `GET /rooms/{room_id}/messages`.
+4. Send over REST with `POST /rooms/{room_id}/messages` and a stable `Idempotency-Key` for retries.
+5. Open `WS /rooms/{room_id}/ws?token=<access_token>`.
+6. Send `message.create` events with `client_message_id`.
+7. Listen for `message.created` events and deduplicate by `message.id`.
+8. Handle WebSocket errors: `invalid_message`, `membership_required`, `rate_limit_exceeded`, and `client_message_id_conflict`.
 
-Orden recomendado para clientes: cargar historial primero y conectar el WebSocket despues. Enviar mensajes nuevos por WebSocket cuando el socket este conectado; usar REST como fallback si el producto lo necesita.
+Recommended client order: load history first and connect the WebSocket afterwards. Send new messages over WebSocket when connected; use REST as a fallback if the product needs it.
 
 ## WebSocket
 
@@ -437,7 +439,7 @@ Endpoint:
 WS /rooms/{room_id}/ws?token=<access_token>
 ```
 
-Evento cliente-servidor:
+Client-to-server event:
 
 ```json
 {
@@ -447,7 +449,7 @@ Evento cliente-servidor:
 }
 ```
 
-Evento servidor-clientes:
+Server-to-clients event:
 
 ```json
 {
@@ -464,39 +466,40 @@ Evento servidor-clientes:
 }
 ```
 
-Referencia completa: [docs/websocket.md](docs/websocket.md).
+Full reference: [docs/websocket.md](docs/websocket.md).
 
-## Documentacion Tecnica
+## Technical Documentation
 
-- [docs/websocket.md](docs/websocket.md): contrato realtime, errores y QA manual.
-- [docs/idempotency.md](docs/idempotency.md): contrato de `Idempotency-Key` y deduplicacion.
-- [docs/rate-limiting.md](docs/rate-limiting.md): configuracion, scopes y comportamiento REST/WebSocket.
-- [docs/folder-architecture.md](docs/folder-architecture.md): estructura de carpetas y responsabilidades.
-- [docs/design-patterns.md](docs/design-patterns.md): patrones de diseno usados en backend y frontend.
-- [docs/system-design.md](docs/system-design.md): diseno de sistema, flujos, datos, seguridad y escalabilidad.
+- [docs/websocket.md](docs/websocket.md): realtime contract, errors, and manual QA.
+- [docs/idempotency.md](docs/idempotency.md): `Idempotency-Key` contract and deduplication.
+- [docs/rate-limiting.md](docs/rate-limiting.md): configuration, scopes, and REST/WebSocket behavior.
+- [docs/folder-architecture.md](docs/folder-architecture.md): folder structure and responsibilities.
+- [docs/design-patterns.md](docs/design-patterns.md): design patterns used in the backend and frontend.
+- [docs/system-design.md](docs/system-design.md): system design, flows, data, security, and scalability.
+- [docs/es/README.md](docs/es/README.md): Spanish documentation entry point.
 
-## Arquitectura
+## Architecture
 
-Capas principales:
+Main layers:
 
-- `app/api/routes`: endpoints REST y WebSocket.
-- `app/services`: reglas de negocio, auth, idempotencia, membresia y realtime.
-- `app/repositories`: acceso a datos con SQLAlchemy.
-- `app/models`: modelos de base de datos.
-- `app/schemas`: contratos Pydantic de entrada y salida.
-- `app/infra`: database, settings y rate limiting.
-- `app/sockets`: connection manager para conexiones WebSocket por sala.
-- `frontend/src/api`: cliente HTTP/WebSocket.
-- `frontend/src/hooks`: auth y ciclo de vida realtime.
-- `frontend/src/pages` y `frontend/src/components`: UI.
+- `app/api/routes`: REST and WebSocket endpoints.
+- `app/services`: business rules, auth, idempotency, membership, and realtime behavior.
+- `app/repositories`: data access with SQLAlchemy.
+- `app/models`: database models.
+- `app/schemas`: Pydantic input and output contracts.
+- `app/infra`: database, settings, and rate limiting.
+- `app/sockets`: connection manager for room-scoped WebSocket connections.
+- `frontend/src/api`: HTTP/WebSocket client.
+- `frontend/src/hooks`: auth and realtime lifecycle.
+- `frontend/src/pages` and `frontend/src/components`: UI.
 
-Decisiones tecnicas:
+Technical decisions:
 
-- Auth usa JWT bearer con `sub` como `user_id`.
-- Passwords se almacenan solo como hash generado por la capa de seguridad.
-- El backend deriva identidad desde el token; el cliente nunca envia `sender_id`.
-- Mensajes REST requieren `Idempotency-Key`, con scope `room_id + sender_id + key`.
-- Mensajes WebSocket usan `client_message_id` y lo almacenan como idempotency key.
-- Rate limiting usa `limits` con estrategia `moving-window` por defecto.
-- `GET /health` es liveness sin DB; `GET /health/db` es readiness con DB.
-- Persistencia se versiona con Alembic y Postgres.
+- Auth uses JWT bearer tokens with `sub` as `user_id`.
+- Passwords are stored only as hashes generated by the security layer.
+- The backend derives identity from the token; the client never sends `sender_id`.
+- REST messages require `Idempotency-Key`, scoped by `room_id + sender_id + key`.
+- WebSocket messages use `client_message_id` and store it as the idempotency key.
+- Rate limiting uses `limits` with `moving-window` by default.
+- `GET /health` is liveness without DB; `GET /health/db` is readiness with DB.
+- Persistence is versioned with Alembic and Postgres.

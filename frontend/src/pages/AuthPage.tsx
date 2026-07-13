@@ -12,7 +12,7 @@ export function AuthPage() {
       <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-semibold text-gray-900">GBH Chat</h1>
-          <p className="mt-1 text-sm text-gray-500">Ingresa o crea una cuenta para continuar</p>
+          <p className="mt-1 text-sm text-gray-500">Log in or create an account to continue</p>
         </div>
 
         <div className="mb-6 grid grid-cols-2 rounded-md bg-gray-100 p-1">
@@ -23,7 +23,7 @@ export function AuthPage() {
               tab === 'login' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'
             }`}
           >
-            Ingresar
+            Log in
           </button>
           <button
             type="button"
@@ -32,7 +32,7 @@ export function AuthPage() {
               tab === 'register' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'
             }`}
           >
-            Registrarse
+            Sign up
           </button>
         </div>
 

@@ -78,7 +78,7 @@ export function useRoomWebSocket({
 
     socket.addEventListener('error', () => {
       setStatus('error')
-      setError('No se pudo conectar al chat en tiempo real')
+      setError('Could not connect to real-time chat')
     })
 
     socket.addEventListener('close', (event) => {
@@ -89,7 +89,7 @@ export function useRoomWebSocket({
       setStatus((currentStatus) => (currentStatus === 'error' ? currentStatus : 'disconnected'))
 
       if (event.code === 1008) {
-        setError((currentError) => currentError ?? 'No tienes acceso activo a esta sala')
+        setError((currentError) => currentError ?? 'You do not have active access to this room')
       }
     })
 
@@ -105,7 +105,7 @@ export function useRoomWebSocket({
   const sendMessage = useCallback(async (content: string) => {
     const socket = socketRef.current
     if (!socket || socket.readyState !== WebSocket.OPEN) {
-      throw new Error('El chat en tiempo real no está conectado')
+      throw new Error('Real-time chat is not connected')
     }
 
     socket.send(

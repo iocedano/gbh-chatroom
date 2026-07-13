@@ -20,7 +20,7 @@ export function LoginForm() {
       const response = await loginRequest(username, password)
       login({ token: response.access_token, user: response.user })
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : 'No se pudo iniciar sesión'
+      const message = err instanceof ApiError ? err.message : 'Could not log in'
       setError(message)
     } finally {
       setLoading(false)
@@ -32,7 +32,7 @@ export function LoginForm() {
       <ErrorBanner message={error} />
       <div>
         <label htmlFor="login-username" className="mb-1 block text-sm font-medium text-gray-700">
-          Usuario
+          Username
         </label>
         <input
           id="login-username"
@@ -47,7 +47,7 @@ export function LoginForm() {
       </div>
       <div>
         <label htmlFor="login-password" className="mb-1 block text-sm font-medium text-gray-700">
-          Contraseña
+          Password
         </label>
         <input
           id="login-password"
@@ -64,7 +64,7 @@ export function LoginForm() {
         disabled={loading}
         className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
       >
-        {loading ? 'Ingresando...' : 'Ingresar'}
+        {loading ? 'Logging in...' : 'Log in'}
       </button>
     </form>
   )

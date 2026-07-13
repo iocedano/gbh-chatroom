@@ -37,7 +37,7 @@ describe('api', () => {
     await api('/rooms/1/messages', {
       method: 'POST',
       headers: { 'Idempotency-Key': 'client-1' },
-      body: JSON.stringify({ content: 'Hola' }),
+      body: JSON.stringify({ content: 'Hello' }),
     })
 
     const headers = fetchMock.mock.calls[0][1].headers as Headers

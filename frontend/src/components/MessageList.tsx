@@ -11,10 +11,10 @@ function formatSender(message: Message, currentUserId: number | null) {
   const senderId = message.sender_id
 
   if (currentUserId !== null && senderId === currentUserId) {
-    return 'Tú'
+    return 'You'
   }
 
-  return message.sender_username ?? `Usuario #${senderId}`
+  return message.sender_username ?? `User #${senderId}`
 }
 
 export function MessageList({ messages, currentUserId, loading = false }: MessageListProps) {
@@ -28,13 +28,13 @@ export function MessageList({ messages, currentUserId, loading = false }: Messag
   }, [messages.length])
 
   if (loading) {
-    return <p className="text-sm text-gray-500">Cargando mensajes...</p>
+    return <p className="text-sm text-gray-500">Loading messages...</p>
   }
 
   if (messages.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center rounded-md border border-dashed border-gray-300 bg-white p-6 text-sm text-gray-500">
-        Sé el primero en escribir en esta sala.
+        Be the first to write in this room.
       </div>
     )
   }

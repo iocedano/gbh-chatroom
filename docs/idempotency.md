@@ -76,9 +76,9 @@ Idempotency and rate limiting solve different problems:
 - Idempotency protects legitimate retries from creating duplicate messages.
 - Rate limiting protects the API from spam or abusive high-volume sends.
 
-See [docs/rate-limiting.md](rate-limiting.md) for the full rate limiting pattern, configuration, and transport behavior.
+See [rate-limiting.md](rate-limiting.md) for the full rate limiting pattern, configuration, and transport behavior.
 
-Current REST message creation checks rate limit before the idempotent lookup, so a retry with the same `Idempotency-Key` can still consume rate limit budget. The same tradeoff is documented in [docs/rate-limiting.md](rate-limiting.md).
+Current REST message creation checks rate limit before the idempotent lookup, so a retry with the same `Idempotency-Key` can still consume rate limit budget. The same tradeoff is documented in [rate-limiting.md](rate-limiting.md).
 
 If the product needs retries of the same logical message to bypass rate limiting, use this order:
 

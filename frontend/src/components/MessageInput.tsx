@@ -25,7 +25,7 @@ export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
       await onSend(trimmed)
       setContent('')
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'No se pudo enviar el mensaje'
+      const message = err instanceof Error ? err.message : 'Could not send message'
       setError(message)
     } finally {
       setLoading(false)
@@ -40,7 +40,7 @@ export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
           type="text"
           value={content}
           onChange={(event) => setContent(event.target.value)}
-          placeholder="Escribe un mensaje..."
+          placeholder="Type a message..."
           maxLength={MAX_LENGTH}
           disabled={disabled || loading}
           className="flex-1 rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
@@ -50,7 +50,7 @@ export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
           disabled={disabled || loading || !content.trim()}
           className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
         >
-          {loading ? 'Enviando...' : 'Enviar'}
+          {loading ? 'Sending...' : 'Send'}
         </button>
       </div>
       <p className="text-right text-xs text-gray-400">

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from api.dependencies import get_current_user
 from infra.database import get_db
-from infra.rate_limit import InMemoryRateLimiter
+from infra.rate_limit import LimitsRateLimiter
 from infra.settings import get_settings
 from models.user import User
 from schemas.messages import MessageCreate, MessageRead
@@ -21,7 +21,7 @@ from services.messages import (
 router = APIRouter(prefix="/rooms/{room_id}/messages", tags=["messages"])
 logger = logging.getLogger(__name__)
 settings = get_settings()
-message_rate_limiter = InMemoryRateLimiter(
+message_rate_limiter = LimitsRateLimiter(
     max_events=settings.message_rate_limit_max_events,
     window_seconds=settings.message_rate_limit_window_seconds,
 )

@@ -34,6 +34,13 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = Field(default=60, ge=1, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
     message_rate_limit_max_events: int = Field(default=20, ge=1, alias="MESSAGE_RATE_LIMIT_MAX_EVENTS")
     message_rate_limit_window_seconds: int = Field(default=60, ge=1, alias="MESSAGE_RATE_LIMIT_WINDOW_SECONDS")
+    auth_rate_limit_max_events: int = Field(default=10, ge=1, alias="AUTH_RATE_LIMIT_MAX_EVENTS")
+    auth_rate_limit_window_seconds: int = Field(default=60, ge=1, alias="AUTH_RATE_LIMIT_WINDOW_SECONDS")
+    rate_limit_storage_uri: str = Field(default="memory://", alias="RATE_LIMIT_STORAGE_URI")
+    rate_limit_strategy: Literal["fixed-window", "moving-window", "sliding-window-counter"] = Field(
+        default="moving-window",
+        alias="RATE_LIMIT_STRATEGY",
+    )
     cors_origins: list[str] = Field(
         default=["http://localhost:5173", "http://127.0.0.1:5173"],
         alias="CORS_ORIGINS",

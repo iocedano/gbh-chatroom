@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, status
 from sqlalchemy.orm import Session
 
 from infra.database import get_db
-from infra.rate_limit import InMemoryRateLimiter
+from infra.rate_limit import LimitsRateLimiter
 from infra.settings import get_settings
 from services.realtime import (
     RealtimeAuthError,
@@ -20,7 +20,7 @@ from sockets.connection_manager import manager
 router = APIRouter(prefix="/rooms/{room_id}", tags=["websocket"])
 logger = logging.getLogger(__name__)
 settings = get_settings()
-message_rate_limiter = InMemoryRateLimiter(
+message_rate_limiter = LimitsRateLimiter(
     max_events=settings.message_rate_limit_max_events,
     window_seconds=settings.message_rate_limit_window_seconds,
 )

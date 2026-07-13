@@ -76,7 +76,9 @@ Idempotency and rate limiting solve different problems:
 - Idempotency protects legitimate retries from creating duplicate messages.
 - Rate limiting protects the API from spam or abusive high-volume sends.
 
-When rate limiting is added, the recommended order is:
+See [docs/rate-limiting.md](rate-limiting.md) for the full rate limiting pattern, configuration, and transport behavior.
+
+Recommended order when both protections are active:
 
 ```text
 1. Authenticate user

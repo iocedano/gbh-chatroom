@@ -1,5 +1,10 @@
 from dataclasses import dataclass, field
-from time import monotonic
+from time import time
+from typing import Literal
+
+from limits import RateLimitItemPerSecond
+from limits import storage as limits_storage
+from limits import strategies
 
 
 @dataclass
@@ -9,24 +14,44 @@ class RateLimitResult:
 
 
 @dataclass
-class InMemoryRateLimiter:
+class LimitsRateLimiter:
     max_events: int
     window_seconds: int
-    _events_by_key: dict[str, list[float]] = field(default_factory=dict)
+    storage_uri: str = "memory://"
+    strategy: Literal["fixed-window", "moving-window", "sliding-window-counter"] = "moving-window"
+    _storage: limits_storage.Storage = field(init=False, repr=False)
+    _limiter: strategies.RateLimiter = field(init=False, repr=False)
+    _limit: RateLimitItemPerSecond = field(init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        self._configure()
+
+    def _configure(self) -> None:
+        self._storage = limits_storage.storage_from_string(self.storage_uri)
+        self._limiter = self._build_limiter()
+        self._limit = RateLimitItemPerSecond(self.max_events, self.window_seconds)
+
+    def _build_limiter(self) -> strategies.RateLimiter:
+        if self.strategy == "fixed-window":
+            return strategies.FixedWindowRateLimiter(self._storage)
+        if self.strategy == "sliding-window-counter":
+            return strategies.SlidingWindowCounterRateLimiter(self._storage)
+        return strategies.MovingWindowRateLimiter(self._storage)
 
     def check(self, key: str) -> RateLimitResult:
-        now = monotonic()
-        window_started_at = now - self.window_seconds
-        events = [event_at for event_at in self._events_by_key.get(key, []) if event_at > window_started_at]
+        if self._limit.amount != self.max_events or self._limit.multiples != self.window_seconds:
+            self._limit = RateLimitItemPerSecond(self.max_events, self.window_seconds)
 
-        if len(events) >= self.max_events:
-            retry_after = max(1, int(events[0] + self.window_seconds - now) + 1)
-            self._events_by_key[key] = events
-            return RateLimitResult(allowed=False, retry_after_seconds=retry_after)
+        if self._limiter.hit(self._limit, key):
+            return RateLimitResult(allowed=True)
 
-        events.append(now)
-        self._events_by_key[key] = events
-        return RateLimitResult(allowed=True)
+        window_stats = self._limiter.get_window_stats(self._limit, key)
+        retry_after = max(1, int(window_stats.reset_time - time()) + 1)
+        return RateLimitResult(allowed=False, retry_after_seconds=retry_after)
 
     def reset(self) -> None:
-        self._events_by_key.clear()
+        self._storage.reset()
+        self._configure()
+
+
+InMemoryRateLimiter = LimitsRateLimiter

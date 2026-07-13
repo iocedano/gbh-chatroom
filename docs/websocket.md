@@ -133,6 +133,8 @@ Codigos actuales:
 
 `message.create` esta limitado por usuario y sala. Cuando se excede el limite, el backend emite `error` con `code = "rate_limit_exceeded"` y no persiste el mensaje.
 
+Ver [docs/rate-limiting.md](rate-limiting.md) para el patron completo, configuracion y comportamiento en REST y WebSocket.
+
 ## Backend
 
 Archivos principales:

@@ -14,7 +14,7 @@ from services.messages import (
     MessageRoomNotFoundError,
     create_realtime_message,
 )
-from infra.rate_limit import InMemoryRateLimiter
+from infra.rate_limit import LimitsRateLimiter
 from services.users import UserNotFoundError, get_user
 
 MESSAGE_CREATE_EVENT = "message.create"
@@ -93,7 +93,7 @@ def process_message_create_event(
     room_id: int,
     sender: User,
     event: dict[str, Any],
-    rate_limiter: InMemoryRateLimiter | None = None,
+    rate_limiter: LimitsRateLimiter | None = None,
 ) -> dict[str, Any]:
     event_type = event.get("type")
     client_message_id = event.get("client_message_id")

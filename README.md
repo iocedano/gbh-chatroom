@@ -35,6 +35,23 @@ The API scopes each key by `room_id + sender_id + Idempotency-Key`, stores a bac
 
 See [docs/idempotency.md](docs/idempotency.md) for the full technical reference and security practices.
 
+## Rate Limiting
+
+Message sends are limited per user and room through the `limits` library. Development uses in-memory storage by default; production can use Redis by changing `RATE_LIMIT_STORAGE_URI`:
+
+```text
+MESSAGE_RATE_LIMIT_MAX_EVENTS=20
+MESSAGE_RATE_LIMIT_WINDOW_SECONDS=60
+RATE_LIMIT_STORAGE_URI=memory://
+RATE_LIMIT_STRATEGY=moving-window
+```
+
+Auth endpoints have a separate policy with `AUTH_RATE_LIMIT_MAX_EVENTS` and `AUTH_RATE_LIMIT_WINDOW_SECONDS`.
+
+REST returns `429 Too Many Requests` with a `Retry-After` header. WebSocket returns an `error` event with `code = "rate_limit_exceeded"`.
+
+See [docs/rate-limiting.md](docs/rate-limiting.md) for the full pattern, scope keys, and extension guide.
+
 ## Health Checks
 
 - `GET /health` is a lightweight liveness probe. It does not touch the database.
@@ -98,6 +115,8 @@ Important behavior:
 - The backend validates active room membership before accepting the socket and before every message.
 - If a user leaves a room while the socket is still open, the next `message.create` returns `membership_required`, closes the socket with policy violation `1008`, and removes the connection from the room manager.
 - Broadcast is scoped by `room_id`, so clients in other rooms do not receive the event.
-- Message sends are rate limited per user and room. Configure the limit with `MESSAGE_RATE_LIMIT_MAX_EVENTS` and `MESSAGE_RATE_LIMIT_WINDOW_SECONDS`.
+- Message sends are rate limited per user and room. Configure the limit with `MESSAGE_RATE_LIMIT_MAX_EVENTS`, `MESSAGE_RATE_LIMIT_WINDOW_SECONDS`, `RATE_LIMIT_STORAGE_URI`, and `RATE_LIMIT_STRATEGY`.
+
+See [docs/rate-limiting.md](docs/rate-limiting.md) for the full rate limiting pattern and configuration.
 
 See [docs/websocket.md](docs/websocket.md) for the full backend/frontend technical reference.

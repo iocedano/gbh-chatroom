@@ -1,14 +1,11 @@
-import os
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+psycopg2://chat_user:chat_password@localhost:5432/chat_app",
-)
+from infra.settings import get_settings
 
-engine = create_engine(DATABASE_URL)
+settings = get_settings()
+
+engine = create_engine(settings.database_url)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

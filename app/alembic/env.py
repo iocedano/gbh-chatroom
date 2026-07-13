@@ -1,5 +1,4 @@
 from logging.config import fileConfig
-import os
 from pathlib import Path
 import sys
 
@@ -12,11 +11,10 @@ if str(BASE_DIR) not in sys.path:
 
 from models import ChatRoom, Message, User  # noqa: F401
 from models.base_model import Base
+from infra.settings import get_settings
 
 config = context.config
-database_url = os.getenv("DATABASE_URL")
-if database_url:
-    config.set_main_option("sqlalchemy.url", database_url)
+config.set_main_option("sqlalchemy.url", get_settings().database_url)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

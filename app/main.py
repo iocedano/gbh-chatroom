@@ -5,15 +5,15 @@ from sqlalchemy.orm import Session
 
 from api.routes import auth, chat_rooms, messages, users, websocket
 from infra.database import get_db
+from infra.settings import get_settings
+
+settings = get_settings()
 
 app = FastAPI(title="GBH Chat API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

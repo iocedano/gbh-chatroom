@@ -34,6 +34,15 @@ Levanta Postgres con Docker si quieres correr API y frontend en tu maquina:
 docker compose up postgres
 ```
 
+Crea los archivos `.env` locales a partir de los ejemplos:
+
+```sh
+cp app/.env.example app/.env
+cp frontend/.env.example frontend/.env
+```
+
+Edita los valores si necesitas otra configuracion. Los defaults funcionan para desarrollo local con Postgres en Docker.
+
 API local:
 
 ```sh
@@ -53,18 +62,11 @@ npm install
 npm run dev
 ```
 
-Variables utiles del frontend:
-
-```text
-VITE_API_URL=http://localhost:8000
-VITE_WS_URL=ws://localhost:8000
-```
-
-Si `VITE_WS_URL` no existe, el frontend deriva `ws://` o `wss://` desde `VITE_API_URL`.
+El frontend lee variables desde `frontend/.env`. Revisa `frontend/.env.example` para ver las opciones disponibles. Si `VITE_WS_URL` no existe, el frontend deriva `ws://` o `wss://` desde `VITE_API_URL`.
 
 ## Variables De Entorno
 
-La API lee variables desde el entorno o desde `app/.env`.
+La API lee variables desde el entorno o desde `app/.env`. Usa `app/.env.example` como plantilla inicial.
 
 | Variable | Default | Uso |
 | --- | --- | --- |

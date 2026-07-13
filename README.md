@@ -34,6 +34,15 @@ Start Postgres with Docker if you want to run the API and frontend on your machi
 docker compose up postgres
 ```
 
+Create local env files from the examples:
+
+```sh
+cp app/.env.example app/.env
+cp frontend/.env.example frontend/.env
+```
+
+Edit them if you need different values. The defaults work for local development with Docker Postgres.
+
 Local API:
 
 ```sh
@@ -53,18 +62,11 @@ npm install
 npm run dev
 ```
 
-Useful frontend variables:
-
-```text
-VITE_API_URL=http://localhost:8000
-VITE_WS_URL=ws://localhost:8000
-```
-
-If `VITE_WS_URL` is not set, the frontend derives `ws://` or `wss://` from `VITE_API_URL`.
+The frontend reads variables from `frontend/.env`. See `frontend/.env.example` for available options. If `VITE_WS_URL` is not set, the frontend derives `ws://` or `wss://` from `VITE_API_URL`.
 
 ## Environment Variables
 
-The API reads variables from the environment or from `app/.env`.
+The API reads variables from the environment or from `app/.env`. See `app/.env.example` for a starting template.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |

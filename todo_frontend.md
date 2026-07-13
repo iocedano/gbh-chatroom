@@ -21,7 +21,7 @@ Lista de pendientes para el frontend de GBH Chat. El MVP actual cubre auth, sala
   - Opción A: extender `MessageRead` en backend con `sender_username`
   - Opción B: cachear usuarios en frontend con `GET /users/{id}`
 - [ ] **Nombre de sala en ChatPage**: hoy muestra `Sala #id`; usar `GET /rooms/{id}` para el nombre
-- [ ] **Salir de sala (leave)**: botón en UI que llame `POST /rooms/{id}/leave`
+- [x] **Salir de sala (leave)**: botón en UI que llame `POST /rooms/{id}/leave`
 - [ ] **Docker**: servicio `web` en `docker-compose.yml` para el frontend
 
 ## Pendiente — Prioridad media

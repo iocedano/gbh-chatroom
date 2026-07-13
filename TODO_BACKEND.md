@@ -24,29 +24,29 @@ Checklist actualizado de lo que falta o conviene cerrar en el backend antes de c
 
 ## P1 - Seguridad, robustez y operacion
 
-- [ ] Agregar rate limiting para envio de mensajes.
+- [x] Agregar rate limiting para envio de mensajes.
   - Aplicar a `POST /rooms/{room_id}/messages`.
   - Aplicar tambien a eventos `message.create` por WebSocket.
   - Devolver errores claros al exceder el limite.
   - Cubrir con tests.
 
-- [ ] Validar permisos y ciclo de vida en operaciones sensibles.
+- [x] Validar permisos y ciclo de vida en operaciones sensibles.
   - Confirmar que usuarios que dejaron un room no puedan leer, enviar ni recibir mensajes.
   - Confirmar comportamiento cuando el creador elimina un room con miembros o sockets activos.
   - Considerar cerrar o limpiar conexiones activas del room eliminado.
 
-- [ ] Agregar logging estructurado para errores importantes.
+- [x] Agregar logging estructurado para errores importantes.
   - Auth fallida sin exponer secretos.
   - Errores de WebSocket.
   - Conflictos de idempotencia.
   - Fallas de base de datos.
 
-- [ ] Mejorar health checks.
+- [x] Mejorar health checks.
   - Mantener `/health/db` como readiness con DB.
   - Agregar `/health` liviano sin DB para liveness.
   - Documentar la diferencia si aplica para despliegue.
 
-- [ ] Revisar estrategia de sanitizacion de contenido.
+- [x] Revisar estrategia de sanitizacion de contenido.
   - Confirmar maximo de 1000 caracteres.
   - Confirmar normalizacion de contenido vacio o whitespace-only.
   - Definir explicitamente si HTML literal se permite en backend y se escapa en cliente.

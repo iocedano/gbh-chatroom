@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -9,6 +11,7 @@ from services.users import InvalidCredentialsError, UserAlreadyExistsError
 from services import users as user_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+logger = logging.getLogger(__name__)
 
 
 @router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
@@ -26,6 +29,7 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
     try:
         user = user_service.authenticate_user(db, payload)
     except InvalidCredentialsError as exc:
+        logger.warning("login_failed", extra={"username": payload.username})
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
 
     return AuthResponse(access_token=create_access_token(subject=str(user.id)), user=UserRead.model_validate(user))

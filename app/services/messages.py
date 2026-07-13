@@ -1,5 +1,6 @@
 import hashlib
 import json
+import logging
 import re
 
 from sqlalchemy.exc import IntegrityError
@@ -11,6 +12,7 @@ from repositories import room_members as room_member_repository
 from schemas.messages import MessageCreate
 
 IDEMPOTENCY_KEY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]+$")
+logger = logging.getLogger(__name__)
 
 
 class MessagePermissionError(ValueError):
@@ -74,6 +76,7 @@ def create_message(db: Session, room_id: int, payload: MessageCreate, *, sender_
         )
     except IntegrityError as exc:
         db.rollback()
+        logger.exception("message_create_integrity_error", extra={"room_id": room_id, "sender_id": sender_id})
         existing_message = message_repository.get_message_by_idempotency_key(
             db,
             room_id=room_id,

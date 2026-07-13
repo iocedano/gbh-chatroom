@@ -49,6 +49,8 @@ Si el usuario deja la sala mientras el socket sigue abierto:
 3. El backend cierra el socket con codigo `1008`.
 4. El endpoint remueve la conexion del connection manager.
 
+Si el creador elimina una sala con sockets activos, el backend cierra las conexiones activas de esa sala con codigo `1008` y remueve el room del connection manager.
+
 ## `client_message_id`
 
 WebSocket usa un `client_message_id` generado por el cliente para deduplicar retries.
@@ -125,8 +127,11 @@ Codigos actuales:
 - `invalid_client_message_id`
 - `invalid_message`
 - `client_message_id_conflict`
+- `rate_limit_exceeded`
 - `room_not_found`
 - `membership_required`
+
+`message.create` esta limitado por usuario y sala. Cuando se excede el limite, el backend emite `error` con `code = "rate_limit_exceeded"` y no persiste el mensaje.
 
 ## Backend
 
@@ -156,6 +161,15 @@ dedupe by client_message_id
 persist message
 broadcast message.created to room
 ```
+
+## Sanitizacion de Contenido
+
+REST y WebSocket usan el schema `MessageCreate`:
+
+- `content` se recorta con `strip()`.
+- Mensajes vacios o solo whitespace se rechazan.
+- El maximo permitido es 1000 caracteres.
+- HTML se almacena como texto literal en backend. Los clientes deben renderizarlo como texto o escaparlo antes de insertarlo en HTML.
 
 ## Frontend
 
@@ -216,6 +230,7 @@ Backend:
 - Conexion en otro room no recibe mensajes de esta sala.
 - Retry con mismo `client_message_id` y mismo contenido no duplica.
 - Retry con mismo `client_message_id` y otro contenido devuelve conflicto.
+- Enviar por encima del limite devuelve `rate_limit_exceeded`.
 - Desconexion limpia la conexion sin romper otros broadcasts.
 
 Frontend:
@@ -227,4 +242,3 @@ Frontend:
 - Usuario A tambien ve confirmacion por evento.
 - Al refrescar, el historial REST contiene los mensajes enviados por WebSocket.
 - Salir de sala desde otra pestana y luego intentar enviar: se muestra error/cierre por membresia.
-

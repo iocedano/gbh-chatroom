@@ -78,7 +78,9 @@ Idempotency and rate limiting solve different problems:
 
 See [docs/rate-limiting.md](rate-limiting.md) for the full rate limiting pattern, configuration, and transport behavior.
 
-Recommended order when both protections are active:
+Current REST message creation checks rate limit before the idempotent lookup, so a retry with the same `Idempotency-Key` can still consume rate limit budget. The same tradeoff is documented in [docs/rate-limiting.md](rate-limiting.md).
+
+If the product needs retries of the same logical message to bypass rate limiting, use this order:
 
 ```text
 1. Authenticate user

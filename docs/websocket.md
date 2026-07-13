@@ -209,15 +209,13 @@ El frontend no hace UI optimista en el primer corte. Esto evita duplicados y man
 
 ## Username en Mensajes
 
-El evento WebSocket `message.created` incluye `sender_username`.
+El evento WebSocket `message.created` y el historial REST `GET /rooms/{room_id}/messages` incluyen `sender_username`.
 
-El historial REST actual puede seguir devolviendo solo `sender_id`. Por eso el frontend trata `sender_username` como opcional:
+El frontend puede seguir usando un fallback defensivo si recibe mensajes antiguos o payloads incompletos:
 
 ```ts
 message.sender_username ?? `Usuario #${message.sender_id}`
 ```
-
-Pendiente recomendado: extender `GET /rooms/{room_id}/messages` para devolver `sender_username` tambien en historial.
 
 ## QA Manual
 

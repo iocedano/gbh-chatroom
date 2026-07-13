@@ -13,6 +13,7 @@ from services.chat_rooms import (
     ChatRoomNotFoundError,
     ChatRoomPermissionError,
 )
+from sockets.connection_manager import manager
 
 router = APIRouter(prefix="/rooms", tags=["chat rooms"])
 
@@ -61,9 +62,10 @@ def update_room(
 
 
 @router.delete("/{room_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_room(room_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+async def delete_room(room_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     try:
         chat_room_service.delete_chat_room(db, room_id, requested_by=current_user.id)
+        await manager.close_room(room_id)
     except ChatRoomNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except ChatRoomPermissionError as exc:

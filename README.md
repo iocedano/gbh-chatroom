@@ -35,6 +35,11 @@ The API scopes each key by `room_id + sender_id + Idempotency-Key`, stores a bac
 
 See [docs/idempotency.md](docs/idempotency.md) for the full technical reference and security practices.
 
+## Health Checks
+
+- `GET /health` is a lightweight liveness probe. It does not touch the database.
+- `GET /health/db` is a readiness probe. It runs `SELECT 1` against the configured database.
+
 ## Real-Time Messaging With WebSocket
 
 Rooms expose a WebSocket endpoint for real-time messages:
@@ -93,5 +98,6 @@ Important behavior:
 - The backend validates active room membership before accepting the socket and before every message.
 - If a user leaves a room while the socket is still open, the next `message.create` returns `membership_required`, closes the socket with policy violation `1008`, and removes the connection from the room manager.
 - Broadcast is scoped by `room_id`, so clients in other rooms do not receive the event.
+- Message sends are rate limited per user and room. Configure the limit with `MESSAGE_RATE_LIMIT_MAX_EVENTS` and `MESSAGE_RATE_LIMIT_WINDOW_SECONDS`.
 
 See [docs/websocket.md](docs/websocket.md) for the full backend/frontend technical reference.

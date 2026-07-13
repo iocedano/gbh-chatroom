@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -8,6 +10,7 @@ from services.auth import InvalidTokenError, decode_access_token
 from services.users import UserNotFoundError, get_user
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+logger = logging.getLogger(__name__)
 
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
@@ -22,4 +25,5 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         user_id = int(payload["sub"])
         return get_user(db, user_id)
     except (InvalidTokenError, KeyError, TypeError, ValueError, UserNotFoundError) as exc:
+        logger.warning("auth_failed", extra={"reason": exc.__class__.__name__})
         raise credentials_exception from exc

@@ -21,5 +21,5 @@ class ChatRoom(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     creator: Mapped["User"] = relationship(back_populates="rooms_created")
-    messages: Mapped[list["Message"]] = relationship(back_populates="room")
+    messages: Mapped[list["Message"]] = relationship(back_populates="room", cascade="all, delete-orphan")
     members: Mapped[list["RoomMember"]] = relationship(back_populates="room", cascade="all, delete-orphan")

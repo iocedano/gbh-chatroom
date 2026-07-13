@@ -1,5 +1,8 @@
+import logging
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -8,6 +11,7 @@ from infra.database import get_db
 from infra.settings import get_settings
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="GBH Chat API")
 
@@ -31,7 +35,16 @@ def read_root():
     return {"name": "GBH Chat API", "status": "ok"}
 
 
+@app.get("/health")
+def read_health():
+    return {"status": "ok"}
+
+
 @app.get("/health/db")
 def read_db_health(db: Session = Depends(get_db)):
-    db.execute(text("SELECT 1"))
+    try:
+        db.execute(text("SELECT 1"))
+    except SQLAlchemyError:
+        logger.exception("database_health_check_failed")
+        raise
     return {"database": "ok"}

@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     )
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = Field(default=60, ge=1, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
+    message_rate_limit_max_events: int = Field(default=20, ge=1, alias="MESSAGE_RATE_LIMIT_MAX_EVENTS")
+    message_rate_limit_window_seconds: int = Field(default=60, ge=1, alias="MESSAGE_RATE_LIMIT_WINDOW_SECONDS")
     cors_origins: list[str] = Field(
         default=["http://localhost:5173", "http://127.0.0.1:5173"],
         alias="CORS_ORIGINS",

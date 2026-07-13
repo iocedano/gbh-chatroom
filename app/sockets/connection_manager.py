@@ -1,4 +1,4 @@
-from fastapi import WebSocket
+from fastapi import WebSocket, status
 
 
 class ConnectionManager:
@@ -30,6 +30,13 @@ class ConnectionManager:
 
         for websocket in stale_connections:
             self.disconnect(room_id, websocket)
+
+    async def close_room(self, room_id: int) -> None:
+        connections = set(self.active_connections.get(room_id, set()))
+        self.active_connections.pop(room_id, None)
+
+        for websocket in connections:
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
 
 
 manager = ConnectionManager()

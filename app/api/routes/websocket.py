@@ -1,7 +1,11 @@
+import logging
+
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, status
 from sqlalchemy.orm import Session
 
 from infra.database import get_db
+from infra.rate_limit import InMemoryRateLimiter
+from infra.settings import get_settings
 from services.realtime import (
     RealtimeAuthError,
     RealtimeCloseConnectionError,
@@ -14,6 +18,12 @@ from services.realtime import (
 from sockets.connection_manager import manager
 
 router = APIRouter(prefix="/rooms/{room_id}", tags=["websocket"])
+logger = logging.getLogger(__name__)
+settings = get_settings()
+message_rate_limiter = InMemoryRateLimiter(
+    max_events=settings.message_rate_limit_max_events,
+    window_seconds=settings.message_rate_limit_window_seconds,
+)
 
 
 async def _send_error(websocket: WebSocket, *, code: str, message: str, client_message_id: str | None = None) -> None:
@@ -24,11 +34,13 @@ async def _send_error(websocket: WebSocket, *, code: str, message: str, client_m
 async def room_websocket(room_id: int, websocket: WebSocket, db: Session = Depends(get_db)):
     try:
         current_user = authenticate_user(websocket.query_params.get("token"), db)
-    except RealtimeAuthError:
+    except RealtimeAuthError as exc:
+        logger.warning("websocket_auth_failed", extra={"room_id": room_id, "reason": str(exc)})
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
 
     if not is_active_room_member(db, room_id=room_id, user_id=current_user.id):
+        logger.warning("websocket_membership_rejected", extra={"room_id": room_id, "user_id": current_user.id})
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
 
@@ -60,8 +72,13 @@ async def room_websocket(room_id: int, websocket: WebSocket, db: Session = Depen
                     room_id=room_id,
                     sender=current_user,
                     event=event,
+                    rate_limiter=message_rate_limiter,
                 )
             except RealtimeCloseConnectionError as exc:
+                logger.warning(
+                    "websocket_connection_closing_error",
+                    extra={"room_id": room_id, "user_id": current_user.id, "code": exc.code},
+                )
                 await _send_error(
                     websocket,
                     code=exc.code,
@@ -71,6 +88,10 @@ async def room_websocket(room_id: int, websocket: WebSocket, db: Session = Depen
                 await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
                 return
             except RealtimeEventError as exc:
+                logger.warning(
+                    "websocket_event_error",
+                    extra={"room_id": room_id, "user_id": current_user.id, "code": exc.code},
+                )
                 await _send_error(
                     websocket,
                     code=exc.code,

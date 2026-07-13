@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
@@ -10,5 +10,11 @@ export default defineConfig({
     watch: {
       usePolling: process.env.CHOKIDAR_USEPOLLING === 'true',
     },
+  },
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    restoreMocks: true,
+    globals: true,
   },
 })

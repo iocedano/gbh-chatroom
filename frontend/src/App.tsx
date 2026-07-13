@@ -1,11 +1,15 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
-import { AuthProvider, useAuth } from './hooks/useAuth'
+import { AuthProvider } from './context/AuthProvider'
+import { useAuth } from './hooks/useAuth'
 import { AuthPage } from './pages/AuthPage'
 import { ChatPage } from './pages/ChatPage'
 import { RoomsPage } from './pages/RoomsPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isCheckingSession } = useAuth()
+  if (isCheckingSession) {
+    return <SessionLoading />
+  }
   if (!isAuthenticated) {
     return <Navigate to="/" replace />
   }
@@ -13,11 +17,22 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, isCheckingSession } = useAuth()
+  if (isCheckingSession) {
+    return <SessionLoading />
+  }
   if (isAuthenticated) {
     return <Navigate to="/rooms" replace />
   }
   return children
+}
+
+function SessionLoading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 text-sm text-gray-500">
+      Cargando sesión...
+    </div>
+  )
 }
 
 function AppRoutes() {
